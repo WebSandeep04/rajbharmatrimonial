@@ -11,11 +11,11 @@ const SplashScreen = () => {
       try {
         const token = await AsyncStorage.getItem('userToken');
         if (token) {
-          // Navigate to Home
+          // Navigate to Main
           navigation.dispatch(
             CommonActions.reset({
               index: 0,
-              routes: [{ name: 'Home' }],
+              routes: [{ name: 'Main' }],
             })
           );
         } else {
