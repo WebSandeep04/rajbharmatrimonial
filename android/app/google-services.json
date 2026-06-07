@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "117930909252",
+    "project_id": "rajbharmatrimonial",
+    "storage_bucket": "rajbharmatrimonial.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:117930909252:android:7083c0b9fd044a53472611",
+        "android_client_info": {
+          "package_name": "com.rajbharmatrimonial"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "117930909252-j82tgbh8fi502q8m7g2k337fp872lrfh.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.rajbharmatrimonial",
+            "certificate_hash": "5e8f16062ea3cd2c4a0d547876baa6f38cabf625"
+          }
+        },
+        {
+          "client_id": "117930909252-3qkj2mt82npkevtphenjb1mpadbcvprb.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAwahIVex8Kt0ZWGpWqobb39SEFgHgSV5Q"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "117930909252-3qkj2mt82npkevtphenjb1mpadbcvprb.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
