@@ -1,20 +1,39 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
 import { Bell, ShieldCheck } from 'lucide-react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { colors } from '../../theme/colors';
 import { typography } from '../../theme/typography';
 
 const TopAppBar = () => {
+  const [userData, setUserData] = useState<{ name?: string, profile_photo?: string } | null>(null);
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const userInfo = await AsyncStorage.getItem('userInfo');
+        if (userInfo) {
+          setUserData(JSON.parse(userInfo));
+        }
+      } catch (error) {
+        console.error('Failed to load user info', error);
+      }
+    };
+    fetchUser();
+  }, []);
+
+  const fallbackImage = { uri: 'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png' };
+
   return (
     <View style={styles.container}>
       <View style={styles.profileSection}>
         <Image
-          source={{ uri: 'https://randomuser.me/api/portraits/men/32.jpg' }}
+          source={userData?.profile_photo ? { uri: userData.profile_photo } : fallbackImage}
           style={styles.avatar}
         />
         <View style={styles.textContainer}>
           <Text style={styles.greeting}>Good Evening,</Text>
-          <Text style={styles.name}>Sandeep</Text>
+          <Text style={styles.name}>{userData?.name?.split(' ')[0] || 'User'}</Text>
         </View>
       </View>
 
@@ -38,7 +57,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 20,
-    paddingTop: 12,
+    paddingTop: 25,
     paddingBottom: 12,
     backgroundColor: colors.surface,
   },

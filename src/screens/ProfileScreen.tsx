@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   View, 
   Text, 
@@ -21,8 +21,24 @@ import { typography } from '../theme/typography';
 const ProfileScreen = () => {
   const navigation = useNavigation();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [userData, setUserData] = useState<{name?: string, email?: string, profile_photo?: string} | null>(null);
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const userInfo = await AsyncStorage.getItem('userInfo');
+        if (userInfo) {
+          setUserData(JSON.parse(userInfo));
+        }
+      } catch (error) {
+        console.error('Failed to load user info', error);
+      }
+    };
+    fetchUser();
+  }, []);
 
   const handleLogout = async () => {
+
     Alert.alert(
       'Log Out',
       'Are you sure you want to log out of your account?',
@@ -81,6 +97,8 @@ const ProfileScreen = () => {
     </TouchableOpacity>
   );
 
+  const fallbackImage = { uri: 'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png' };
+
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView showsVerticalScrollIndicator={false}>
@@ -91,11 +109,11 @@ const ProfileScreen = () => {
 
         <View style={styles.profileSection}>
           <Image 
-            source={{ uri: 'https://randomuser.me/api/portraits/men/32.jpg' }} 
+            source={userData?.profile_photo ? { uri: userData.profile_photo } : fallbackImage}
             style={styles.avatar} 
           />
-          <Text style={styles.name}>Sandeep Rajbhar</Text>
-          <Text style={styles.email}>sandeep@example.com</Text>
+          <Text style={styles.name}>{userData?.name || 'User'}</Text>
+          <Text style={styles.email}>{userData?.email || 'No Email'}</Text>
           
           <TouchableOpacity style={styles.editButton}>
             <Text style={styles.editButtonText}>Edit Profile</Text>

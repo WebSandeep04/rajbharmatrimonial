@@ -1,7 +1,10 @@
 import React from 'react';
-import { View, Text, StyleSheet, Image, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, Image, ScrollView, Dimensions } from 'react-native';
 import { colors } from '../../theme/colors';
 import { typography } from '../../theme/typography';
+
+const { width } = Dimensions.get('window');
+const CARD_WIDTH = width - 48; // Full width minus margins
 
 const STORIES = [
   {
@@ -25,7 +28,13 @@ const SuccessStories = () => {
     <View style={styles.container}>
       <Text style={styles.sectionTitle}>Success Stories</Text>
       
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
+      <ScrollView 
+        horizontal 
+        showsHorizontalScrollIndicator={false} 
+        contentContainerStyle={styles.scrollContent}
+        snapToInterval={CARD_WIDTH + 16} // card width + marginHorizontal * 2
+        decelerationRate="fast"
+      >
         {STORIES.map((story) => (
           <View key={story.id} style={styles.card}>
             <Image source={{ uri: story.image }} style={styles.image} />
@@ -54,7 +63,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
   },
   card: {
-    width: 300,
+    width: CARD_WIDTH,
     height: 180,
     marginHorizontal: 8,
     borderRadius: 20,

@@ -87,7 +87,7 @@ const RecommendedProfiles = () => {
 
 const styles = StyleSheet.create({
   container: {
-    marginBottom: 24,
+    marginBottom: 32,
   },
   headerRow: {
     flexDirection: 'row',
@@ -105,6 +105,8 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingHorizontal: 16,
+    paddingBottom: 20, // Add padding bottom for shadow and spacing
+    paddingTop: 8,
   },
   card: {
     width: 280,
@@ -116,12 +118,13 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.15,
     shadowRadius: 8,
-    overflow: 'hidden',
   },
   image: {
     width: '100%',
     height: 200,
     resizeMode: 'cover',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
   },
   matchBadge: {
     position: 'absolute',
