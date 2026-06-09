@@ -1,22 +1,22 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate, Link, Outlet, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Users, Settings, LogOut, Activity, Bell } from 'lucide-react';
+import { useDispatch, useSelector } from 'react-redux';
+import { LayoutDashboard, Users, Settings, LogOut, Activity, Bell, Database } from 'lucide-react';
 import api from '../services/api';
+import { logout } from '../store/slices/authSlice';
+import type { RootState } from '../store';
 
 const Dashboard: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const [adminUser, setAdminUser] = useState<any>(null);
+  const dispatch = useDispatch();
+  const { user: adminUser, isAuthenticated } = useSelector((state: RootState) => state.auth);
 
   useEffect(() => {
-    const token = localStorage.getItem('admin_token');
-    const user = localStorage.getItem('admin_user');
-    if (!token || !user) {
+    if (!isAuthenticated) {
       navigate('/login');
-    } else {
-      setAdminUser(JSON.parse(user));
     }
-  }, [navigate]);
+  }, [isAuthenticated, navigate]);
 
   const handleLogout = async () => {
     try {
@@ -24,8 +24,7 @@ const Dashboard: React.FC = () => {
     } catch (err) {
       console.error('Logout failed', err);
     } finally {
-      localStorage.removeItem('admin_token');
-      localStorage.removeItem('admin_user');
+      dispatch(logout());
       navigate('/login');
     }
   };
@@ -34,6 +33,7 @@ const Dashboard: React.FC = () => {
 
   const isOverview = location.pathname === '/dashboard' || location.pathname === '/dashboard/';
   const isUsers = location.pathname.includes('/dashboard/users');
+  const isMasters = location.pathname.includes('/dashboard/masters');
 
   return (
     <div className="dashboard-container">
@@ -41,7 +41,7 @@ const Dashboard: React.FC = () => {
         <div className="sidebar-header">
           <h2><LayoutDashboard className="text-accent-primary" /> Admin Panel</h2>
         </div>
-        
+
         <nav className="sidebar-nav">
           <Link to="/dashboard" className={`nav-link ${isOverview ? 'active' : ''}`}>
             <Activity size={20} />
@@ -50,6 +50,10 @@ const Dashboard: React.FC = () => {
           <Link to="/dashboard/users" className={`nav-link ${isUsers ? 'active' : ''}`}>
             <Users size={20} />
             User Management
+          </Link>
+          <Link to="/dashboard/masters" className={`nav-link ${isMasters ? 'active' : ''}`}>
+            <Database size={20} />
+            Master Data
           </Link>
           <a href="#" className="nav-link">
             <Settings size={20} />

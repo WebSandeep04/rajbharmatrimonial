@@ -4,6 +4,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\AdminAuthController;
+use App\Http\Controllers\Api\Admin\MasterDataController;
 
 Route::post('/auth/google-login', [AuthController::class, 'googleLogin']);
 
@@ -19,4 +20,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/admin/users', [\App\Http\Controllers\Api\Admin\UserController::class, 'store']);
     Route::put('/admin/users/{id}', [\App\Http\Controllers\Api\Admin\UserController::class, 'update']);
     Route::patch('/admin/users/{id}/status', [\App\Http\Controllers\Api\Admin\UserController::class, 'toggleStatus']);
+    
+    // Master Data Management
+    Route::apiResource('/admin/masters/{type}', MasterDataController::class)->except(['show']);
 });

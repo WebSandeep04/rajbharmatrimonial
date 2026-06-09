@@ -3,11 +3,14 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import UserManagement from './pages/UserManagement';
+import MasterDataManagement from './pages/MasterDataManagement';
+import { useSelector } from 'react-redux';
+import type { RootState } from './store';
 import './index.css';
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  const token = localStorage.getItem('admin_token');
-  if (!token) {
+  const isAuthenticated = useSelector((state: RootState) => state.auth.isAuthenticated);
+  if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
   return <>{children}</>;
@@ -27,6 +30,7 @@ const App: React.FC = () => {
           } 
         >
           <Route path="users" element={<UserManagement />} />
+          <Route path="masters" element={<MasterDataManagement />} />
         </Route>
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>

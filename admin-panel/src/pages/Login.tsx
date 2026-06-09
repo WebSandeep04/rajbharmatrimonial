@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useDispatch } from 'react-redux';
 import { Lock, Mail, AlertCircle, Loader2 } from 'lucide-react';
 import api from '../services/api';
+import { setCredentials } from '../store/slices/authSlice';
 
 const Login: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -9,6 +11,7 @@ const Login: React.FC = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const dispatch = useDispatch();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -17,11 +20,13 @@ const Login: React.FC = () => {
 
     try {
       const response = await api.post('/admin/login', { email, password });
-      if (response.data.token) {
-        localStorage.setItem('admin_token', response.data.token);
-        localStorage.setItem('admin_user', JSON.stringify(response.data.admin));
-        navigate('/dashboard');
-      }
+      
+      dispatch(setCredentials({
+        user: response.data.admin,
+        token: response.data.token
+      }));
+
+      navigate('/dashboard');
     } catch (err: any) {
       setError(err.response?.data?.message || 'Invalid credentials');
     } finally {
