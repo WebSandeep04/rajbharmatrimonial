@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 import { X, Loader2 } from 'lucide-react';
-import api from '../services/api';
+import { fetchReligion } from '../store/slices/masters/religionSlice';
+import { fetchState } from '../store/slices/masters/stateSlice';
+import type { AppDispatch, RootState } from '../store';
 
 interface MasterDataModalProps {
   isOpen: boolean;
@@ -12,45 +15,42 @@ interface MasterDataModalProps {
 }
 
 const MasterDataModal: React.FC<MasterDataModalProps> = ({ isOpen, onClose, onSave, entry, masterType, masterName }) => {
+  const dispatch = useDispatch<AppDispatch>();
+  const religionOptions = useSelector((state: RootState) => state.religion.data);
+  const stateOptions = useSelector((state: RootState) => state.state.data);
+
   const [name, setName] = useState('');
   const [parentId, setParentId] = useState('');
-  const [parentOptions, setParentOptions] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
+  const parentOptions = masterType === 'caste' ? religionOptions : masterType === 'city' ? stateOptions : [];
+
   useEffect(() => {
-    if (entry) {
-      setName(entry.name);
-      if (masterType === 'caste') setParentId(entry.religion_id || '');
-      if (masterType === 'city') setParentId(entry.state_id || '');
-    } else {
-      setName('');
-      setParentId('');
+    let active = true;
+    if (active) {
+      if (entry) {
+        setName(entry.name);
+        if (masterType === 'caste') setParentId(entry.religion_id || '');
+        if (masterType === 'city') setParentId(entry.state_id || '');
+      } else {
+        setName('');
+        setParentId('');
+      }
+      setError('');
     }
-    setError('');
+    return () => { active = false; };
   }, [entry, isOpen, masterType]);
 
   useEffect(() => {
     if (!isOpen) return;
 
-    const fetchParents = async () => {
-      try {
-        if (masterType === 'caste') {
-          const res = await api.get('/admin/religion-masters');
-          setParentOptions(res.data);
-        } else if (masterType === 'city') {
-          const res = await api.get('/admin/state-masters');
-          setParentOptions(res.data);
-        }
-      } catch (err) {
-        console.error('Failed to fetch parent options', err);
-      }
-    };
-
-    if (masterType === 'caste' || masterType === 'city') {
-      fetchParents();
+    if (masterType === 'caste') {
+      dispatch(fetchReligion());
+    } else if (masterType === 'city') {
+      dispatch(fetchState());
     }
-  }, [isOpen, masterType]);
+  }, [isOpen, masterType, dispatch]);
 
   if (!isOpen) return null;
 

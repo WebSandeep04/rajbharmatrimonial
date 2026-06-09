@@ -23,16 +23,20 @@ const UserModal: React.FC<UserModalProps> = ({ isOpen, onClose, onSave, user }) 
   const [error, setError] = useState('');
 
   useEffect(() => {
-    if (user) {
-      setName(user.name);
-      setEmail(user.email);
-      setPassword('');
-    } else {
-      setName('');
-      setEmail('');
-      setPassword('');
+    let active = true;
+    if (active) {
+      if (user) {
+        setName(user.name);
+        setEmail(user.email);
+        setPassword('');
+      } else {
+        setName('');
+        setEmail('');
+        setPassword('');
+      }
+      setError('');
     }
-    setError('');
+    return () => { active = false; };
   }, [user, isOpen]);
 
   if (!isOpen) return null;

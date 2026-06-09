@@ -1,7 +1,47 @@
 import React, { useState, useEffect } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 import { Plus, Edit2, Trash2, Loader2, Database } from 'lucide-react';
-import api from '../services/api';
 import MasterDataModal from '../components/MasterDataModal';
+import type { AppDispatch, RootState } from '../store';
+
+// Import all actions
+import { fetchReligion, addReligion, updateReligion, deleteReligion } from '../store/slices/masters/religionSlice';
+import { fetchCaste, addCaste, updateCaste, deleteCaste } from '../store/slices/masters/casteSlice';
+import { fetchGotra, addGotra, updateGotra, deleteGotra } from '../store/slices/masters/gotraSlice';
+import { fetchNakshatra, addNakshatra, updateNakshatra, deleteNakshatra } from '../store/slices/masters/nakshatraSlice';
+import { fetchRashi, addRashi, updateRashi, deleteRashi } from '../store/slices/masters/rashiSlice';
+import { fetchState, addState, updateState, deleteState } from '../store/slices/masters/stateSlice';
+import { fetchCity, addCity, updateCity, deleteCity } from '../store/slices/masters/citySlice';
+import { fetchHighestEducation, addHighestEducation, updateHighestEducation, deleteHighestEducation } from '../store/slices/masters/highestEducationSlice';
+import { fetchProfession, addProfession, updateProfession, deleteProfession } from '../store/slices/masters/professionSlice';
+import { fetchIncomeRange, addIncomeRange, updateIncomeRange, deleteIncomeRange } from '../store/slices/masters/incomeRangeSlice';
+import { fetchBodyType, addBodyType, updateBodyType, deleteBodyType } from '../store/slices/masters/bodyTypeSlice';
+import { fetchComplexion, addComplexion, updateComplexion, deleteComplexion } from '../store/slices/masters/complexionSlice';
+import { fetchBloodGroup, addBloodGroup, updateBloodGroup, deleteBloodGroup } from '../store/slices/masters/bloodGroupSlice';
+import { fetchDiet, addDiet, updateDiet, deleteDiet } from '../store/slices/masters/dietSlice';
+import { fetchMaritalStatus, addMaritalStatus, updateMaritalStatus, deleteMaritalStatus } from '../store/slices/masters/maritalStatusSlice';
+import { fetchFamilyType, addFamilyType, updateFamilyType, deleteFamilyType } from '../store/slices/masters/familyTypeSlice';
+import { fetchProfileCreatedFor, addProfileCreatedFor, updateProfileCreatedFor, deleteProfileCreatedFor } from '../store/slices/masters/profileCreatedForSlice';
+
+const masterActions: Record<string, { fetch: Function, add: Function, update: Function, delete: Function, stateKey: string }> = {
+  religion: { fetch: fetchReligion, add: addReligion, update: updateReligion, delete: deleteReligion, stateKey: 'religion' },
+  caste: { fetch: fetchCaste, add: addCaste, update: updateCaste, delete: deleteCaste, stateKey: 'caste' },
+  gotra: { fetch: fetchGotra, add: addGotra, update: updateGotra, delete: deleteGotra, stateKey: 'gotra' },
+  nakshatra: { fetch: fetchNakshatra, add: addNakshatra, update: updateNakshatra, delete: deleteNakshatra, stateKey: 'nakshatra' },
+  rashi: { fetch: fetchRashi, add: addRashi, update: updateRashi, delete: deleteRashi, stateKey: 'rashi' },
+  state: { fetch: fetchState, add: addState, update: updateState, delete: deleteState, stateKey: 'state' },
+  city: { fetch: fetchCity, add: addCity, update: updateCity, delete: deleteCity, stateKey: 'city' },
+  highest_education: { fetch: fetchHighestEducation, add: addHighestEducation, update: updateHighestEducation, delete: deleteHighestEducation, stateKey: 'highestEducation' },
+  profession: { fetch: fetchProfession, add: addProfession, update: updateProfession, delete: deleteProfession, stateKey: 'profession' },
+  income_range: { fetch: fetchIncomeRange, add: addIncomeRange, update: updateIncomeRange, delete: deleteIncomeRange, stateKey: 'incomeRange' },
+  body_type: { fetch: fetchBodyType, add: addBodyType, update: updateBodyType, delete: deleteBodyType, stateKey: 'bodyType' },
+  complexion: { fetch: fetchComplexion, add: addComplexion, update: updateComplexion, delete: deleteComplexion, stateKey: 'complexion' },
+  blood_group: { fetch: fetchBloodGroup, add: addBloodGroup, update: updateBloodGroup, delete: deleteBloodGroup, stateKey: 'bloodGroup' },
+  diet: { fetch: fetchDiet, add: addDiet, update: updateDiet, delete: deleteDiet, stateKey: 'diet' },
+  marital_status: { fetch: fetchMaritalStatus, add: addMaritalStatus, update: updateMaritalStatus, delete: deleteMaritalStatus, stateKey: 'maritalStatus' },
+  family_type: { fetch: fetchFamilyType, add: addFamilyType, update: updateFamilyType, delete: deleteFamilyType, stateKey: 'familyType' },
+  profile_created_for: { fetch: fetchProfileCreatedFor, add: addProfileCreatedFor, update: updateProfileCreatedFor, delete: deleteProfileCreatedFor, stateKey: 'profileCreatedFor' },
+};
 
 const masterTypes = [
   { id: 'religion', name: 'Religion' },
@@ -24,57 +64,41 @@ const masterTypes = [
 ];
 
 const MasterDataManagement: React.FC = () => {
-  const [activeMaster, setActiveMaster] = useState(masterTypes[0].id);
-  const [data, setData] = useState<any[]>([]);
-  const [loading, setLoading] = useState(false);
-  
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedEntry, setSelectedEntry] = useState<any>(null);
+  const dispatch = useDispatch<AppDispatch>();
 
-  const fetchMasterData = async (type: string) => {
-    try {
-      setLoading(true);
-      const response = await api.get(`/admin/${type}-masters`);
-      setData(response.data);
-    } catch (err) {
-      console.error('Failed to fetch master data', err);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const [activeMaster, setActiveMaster] = useState(masterTypes[0].id);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedEntry, setSelectedEntry] = useState<Record<string, unknown> | null>(null);
+
+  const activeActions = masterActions[activeMaster];
+
+  const currentState = useSelector((state: RootState) => {
+    return (state as Record<string, any>)[activeActions.stateKey] || { data: [], loading: false };
+  });
+
+  const { data, loading } = currentState;
 
   useEffect(() => {
-    fetchMasterData(activeMaster);
-  }, [activeMaster]);
+    dispatch(activeActions.fetch());
+  }, [activeMaster, dispatch, activeActions]);
 
-  const handleOpenModal = (entry: any = null) => {
+  const handleOpenModal = (entry: Record<string, unknown> | null = null) => {
     setSelectedEntry(entry);
     setIsModalOpen(true);
   };
 
-  const handleSave = async (formData: any) => {
-    try {
-      if (selectedEntry) {
-        await api.put(`/admin/${activeMaster}-masters/${selectedEntry.id}`, formData);
-      } else {
-        await api.post(`/admin/${activeMaster}-masters`, formData);
-      }
-      fetchMasterData(activeMaster);
-      setIsModalOpen(false);
-    } catch (err) {
-      console.error('Failed to save master data', err);
-      throw err;
+  const handleSave = async (formData: Record<string, unknown>) => {
+    if (selectedEntry) {
+      await dispatch(activeActions.update({ id: selectedEntry.id, data: formData })).unwrap();
+    } else {
+      await dispatch(activeActions.add(formData)).unwrap();
     }
+    setIsModalOpen(false);
   };
 
   const handleDelete = async (id: number) => {
     if (window.confirm('Are you sure you want to delete this entry?')) {
-      try {
-        await api.delete(`/admin/${activeMaster}-masters/${id}`);
-        fetchMasterData(activeMaster);
-      } catch (err) {
-        console.error('Failed to delete master data', err);
-      }
+      await dispatch(activeActions.delete(id));
     }
   };
 
@@ -93,11 +117,10 @@ const MasterDataManagement: React.FC = () => {
           {masterTypes.map(master => (
             <button
               key={master.id}
-              className={`text-left px-4 py-2 rounded-lg transition-colors ${
-                activeMaster === master.id 
-                  ? 'bg-accent-primary text-white font-medium' 
-                  : 'text-secondary hover:bg-bg-primary hover:text-white'
-              }`}
+              className={`text-left px-4 py-2 rounded-lg transition-colors ${activeMaster === master.id
+                ? 'bg-accent-primary text-white font-medium'
+                : 'text-secondary hover:bg-bg-primary hover:text-white'
+                }`}
               onClick={() => setActiveMaster(master.id)}
             >
               {master.name}
@@ -147,15 +170,15 @@ const MasterDataManagement: React.FC = () => {
                     </td>
                     <td className="text-right">
                       <div className="flex gap-2 justify-end">
-                        <button 
-                          className="btn-icon text-accent-primary" 
+                        <button
+                          className="btn-icon text-accent-primary"
                           title="Edit"
                           onClick={() => handleOpenModal(item)}
                         >
                           <Edit2 size={18} />
                         </button>
-                        <button 
-                          className="btn-icon text-danger" 
+                        <button
+                          className="btn-icon text-danger"
                           title="Delete"
                           onClick={() => handleDelete(item.id)}
                         >
