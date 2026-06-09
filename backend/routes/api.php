@@ -15,4 +15,8 @@ Route::middleware('auth:sanctum')->group(function () {
     
     // Admin routes
     Route::post('/admin/logout', [AdminAuthController::class, 'logout']);
+    Route::get('/admin/users', [\App\Http\Controllers\Api\Admin\UserController::class, 'index']);
+    Route::post('/admin/users', [\App\Http\Controllers\Api\Admin\UserController::class, 'store']);
+    Route::put('/admin/users/{id}', [\App\Http\Controllers\Api\Admin\UserController::class, 'update']);
+    Route::patch('/admin/users/{id}/status', [\App\Http\Controllers\Api\Admin\UserController::class, 'toggleStatus']);
 });

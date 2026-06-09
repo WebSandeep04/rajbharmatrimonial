@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link, Outlet, useLocation } from 'react-router-dom';
 import { LayoutDashboard, Users, Settings, LogOut, Activity, Bell } from 'lucide-react';
 import api from '../services/api';
 
 const Dashboard: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [adminUser, setAdminUser] = useState<any>(null);
 
   useEffect(() => {
@@ -31,6 +32,9 @@ const Dashboard: React.FC = () => {
 
   if (!adminUser) return null;
 
+  const isOverview = location.pathname === '/dashboard' || location.pathname === '/dashboard/';
+  const isUsers = location.pathname.includes('/dashboard/users');
+
   return (
     <div className="dashboard-container">
       <aside className="sidebar">
@@ -39,14 +43,14 @@ const Dashboard: React.FC = () => {
         </div>
         
         <nav className="sidebar-nav">
-          <a href="#" className="nav-link active">
+          <Link to="/dashboard" className={`nav-link ${isOverview ? 'active' : ''}`}>
             <Activity size={20} />
             Overview
-          </a>
-          <a href="#" className="nav-link">
+          </Link>
+          <Link to="/dashboard/users" className={`nav-link ${isUsers ? 'active' : ''}`}>
             <Users size={20} />
             User Management
-          </a>
+          </Link>
           <a href="#" className="nav-link">
             <Settings size={20} />
             Settings
@@ -70,33 +74,39 @@ const Dashboard: React.FC = () => {
           </div>
         </header>
 
-        <div className="stats-grid">
-          <div className="stat-card">
-            <div className="stat-icon">
-              <Users size={24} />
+        {isOverview ? (
+          <>
+            <div className="stats-grid">
+              <div className="stat-card">
+                <div className="stat-icon">
+                  <Users size={24} />
+                </div>
+                <div className="stat-info">
+                  <h3>Total Users</h3>
+                  <p>12,345</p>
+                </div>
+              </div>
+              <div className="stat-card">
+                <div className="stat-icon">
+                  <Activity size={24} />
+                </div>
+                <div className="stat-info">
+                  <h3>Active Sessions</h3>
+                  <p>1,234</p>
+                </div>
+              </div>
             </div>
-            <div className="stat-info">
-              <h3>Total Users</h3>
-              <p>12,345</p>
-            </div>
-          </div>
-          <div className="stat-card">
-            <div className="stat-icon">
-              <Activity size={24} />
-            </div>
-            <div className="stat-info">
-              <h3>Active Sessions</h3>
-              <p>1,234</p>
-            </div>
-          </div>
-        </div>
 
-        <div className="card">
-          <h2 style={{ marginBottom: '1.5rem', fontSize: '1.25rem' }}>Recent Activity</h2>
-          <div style={{ color: 'var(--text-secondary)' }}>
-            No recent activity to display.
-          </div>
-        </div>
+            <div className="card">
+              <h2 style={{ marginBottom: '1.5rem', fontSize: '1.25rem' }}>Recent Activity</h2>
+              <div style={{ color: 'var(--text-secondary)' }}>
+                No recent activity to display.
+              </div>
+            </div>
+          </>
+        ) : (
+          <Outlet />
+        )}
       </main>
     </div>
   );
