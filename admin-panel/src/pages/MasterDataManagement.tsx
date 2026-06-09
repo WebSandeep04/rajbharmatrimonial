@@ -34,7 +34,7 @@ const MasterDataManagement: React.FC = () => {
   const fetchMasterData = async (type: string) => {
     try {
       setLoading(true);
-      const response = await api.get(`/admin/masters/${type}`);
+      const response = await api.get(`/admin/${type}-masters`);
       setData(response.data);
     } catch (err) {
       console.error('Failed to fetch master data', err);
@@ -55,9 +55,9 @@ const MasterDataManagement: React.FC = () => {
   const handleSave = async (formData: any) => {
     try {
       if (selectedEntry) {
-        await api.put(`/admin/masters/${activeMaster}/${selectedEntry.id}`, formData);
+        await api.put(`/admin/${activeMaster}-masters/${selectedEntry.id}`, formData);
       } else {
-        await api.post(`/admin/masters/${activeMaster}`, formData);
+        await api.post(`/admin/${activeMaster}-masters`, formData);
       }
       fetchMasterData(activeMaster);
       setIsModalOpen(false);
@@ -70,7 +70,7 @@ const MasterDataManagement: React.FC = () => {
   const handleDelete = async (id: number) => {
     if (window.confirm('Are you sure you want to delete this entry?')) {
       try {
-        await api.delete(`/admin/masters/${activeMaster}/${id}`);
+        await api.delete(`/admin/${activeMaster}-masters/${id}`);
         fetchMasterData(activeMaster);
       } catch (err) {
         console.error('Failed to delete master data', err);

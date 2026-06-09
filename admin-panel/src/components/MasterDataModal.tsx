@@ -36,10 +36,10 @@ const MasterDataModal: React.FC<MasterDataModalProps> = ({ isOpen, onClose, onSa
     const fetchParents = async () => {
       try {
         if (masterType === 'caste') {
-          const res = await api.get('/admin/masters/religion');
+          const res = await api.get('/admin/religion-masters');
           setParentOptions(res.data);
         } else if (masterType === 'city') {
-          const res = await api.get('/admin/masters/state');
+          const res = await api.get('/admin/state-masters');
           setParentOptions(res.data);
         }
       } catch (err) {
