@@ -14,12 +14,20 @@ const UserProfileScreen = () => {
 
   const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [connectionStatus, setConnectionStatus] = useState('none');
+  const [connectionId, setConnectionId] = useState<number | null>(null);
+  const [connecting, setConnecting] = useState(false);
 
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const response = await api.get(`/users/${userId}`);
-        setProfile(response.data);
+        const [profileRes, statusRes] = await Promise.all([
+          api.get(`/users/${userId}`),
+          api.get(`/connections/status/${userId}`)
+        ]);
+        setProfile(profileRes.data);
+        setConnectionStatus(statusRes.data.status);
+        if (statusRes.data.connection_id) setConnectionId(statusRes.data.connection_id);
       } catch (err) {
         console.error('Failed to fetch user profile', err);
       } finally {
@@ -28,6 +36,25 @@ const UserProfileScreen = () => {
     };
     if (userId) fetchProfile();
   }, [userId]);
+
+  const handleConnect = async () => {
+    if (connecting) return;
+    setConnecting(true);
+    try {
+      if (connectionStatus === 'none') {
+        const res = await api.post('/connections/send', { receiver_id: userId });
+        setConnectionStatus('request_sent');
+        setConnectionId(res.data.connection.id);
+      } else if (connectionStatus === 'request_received') {
+        await api.post(`/connections/${connectionId}/respond`, { action: 'accept' });
+        setConnectionStatus('connected');
+      }
+    } catch (err) {
+      console.error('Connection action failed', err);
+    } finally {
+      setConnecting(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -139,8 +166,18 @@ const UserProfileScreen = () => {
       </ScrollView>
 
       <View style={styles.footer}>
-        <TouchableOpacity style={styles.connectButton}>
-          <Text style={styles.connectButtonText}>Connect Now</Text>
+        <TouchableOpacity 
+          style={[styles.connectButton, connectionStatus === 'request_sent' && styles.connectButtonDisabled]} 
+          onPress={handleConnect}
+          disabled={connectionStatus === 'request_sent' || connecting}
+        >
+          <Text style={styles.connectButtonText}>
+            {connecting ? 'Processing...' : 
+             connectionStatus === 'none' ? 'Connect Now' :
+             connectionStatus === 'request_sent' ? 'Request Sent' :
+             connectionStatus === 'request_received' ? 'Accept Request' :
+             'Connected'}
+          </Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>
@@ -265,6 +302,9 @@ const styles = StyleSheet.create({
     padding: 16,
     borderRadius: 12,
     alignItems: 'center',
+  },
+  connectButtonDisabled: {
+    backgroundColor: colors.textLight,
   },
   connectButtonText: {
     color: '#fff',

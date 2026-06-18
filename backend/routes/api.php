@@ -26,6 +26,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/matches', [\App\Http\Controllers\Api\MatchController::class, 'getRecommendedMatches']);
     Route::post('/matches/search', [\App\Http\Controllers\Api\MatchController::class, 'search']);
     Route::get('/users/{id}', [\App\Http\Controllers\Api\MatchController::class, 'getUserProfile']);
+
+    Route::post('/connections/send', [\App\Http\Controllers\Api\ConnectionController::class, 'sendRequest']);
+    Route::post('/connections/{id}/respond', [\App\Http\Controllers\Api\ConnectionController::class, 'respondRequest']);
+    Route::get('/connections/pending', [\App\Http\Controllers\Api\ConnectionController::class, 'getPendingRequests']);
+    Route::get('/connections', [\App\Http\Controllers\Api\ConnectionController::class, 'getConnections']);
+    Route::get('/connections/status/{userId}', [\App\Http\Controllers\Api\ConnectionController::class, 'getConnectionStatus']);
 });
 
 Route::get('/master-data', [\App\Http\Controllers\Api\MasterDataController::class, 'all']);
