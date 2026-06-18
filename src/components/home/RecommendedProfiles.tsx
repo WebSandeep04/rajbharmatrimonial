@@ -1,10 +1,14 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, Image, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, Image, ScrollView, TouchableOpacity, ActivityIndicator, Dimensions } from 'react-native';
 import { CheckCircle2, MapPin, Briefcase, GraduationCap } from 'lucide-react-native';
 import { useNavigation } from '@react-navigation/native';
+import LinearGradient from 'react-native-linear-gradient';
 import api from '../../services/api';
 import { colors } from '../../theme/colors';
 import { typography } from '../../theme/typography';
+
+const { width } = Dimensions.get('window');
+const CARD_WIDTH = width * 0.75;
 
 const RecommendedProfiles = () => {
   const [profiles, setProfiles] = useState<any[]>([]);
@@ -51,36 +55,51 @@ const RecommendedProfiles = () => {
       ) : profiles.length === 0 ? (
         <Text style={{ textAlign: 'center', margin: 20, color: colors.textLight }}>No matches found yet.</Text>
       ) : (
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
+        <ScrollView 
+          horizontal 
+          showsHorizontalScrollIndicator={false} 
+          contentContainerStyle={styles.scrollContent}
+          snapToInterval={CARD_WIDTH + 16} // card width + margin
+          decelerationRate="fast"
+          snapToAlignment="center"
+        >
           {profiles.map((profile) => {
             const hasSent = sentRequests.includes(profile.id);
             return (
               <View key={profile.id} style={styles.card}>
-                <Image source={{ uri: profile.image }} style={styles.image} />
-                
-                <View style={styles.matchBadge}>
-                  <Text style={styles.matchText}>{profile.matchPercentage}% Match</Text>
+                <View style={styles.imageContainer}>
+                  <Image source={{ uri: profile.image }} style={styles.image} />
+                  <LinearGradient
+                    colors={colors.gradientOverlay}
+                    style={styles.imageOverlay}
+                  />
+                  
+                  <View style={styles.matchBadge}>
+                    <Text style={styles.matchText}>{profile.matchPercentage}% Match</Text>
+                  </View>
+
+                  <View style={styles.imageContent}>
+                    <View style={styles.nameRow}>
+                      <Text style={styles.name}>{profile.name}, {profile.age}</Text>
+                      {profile.verified && <CheckCircle2 size={18} color={colors.secondary} style={styles.verifiedIcon} />}
+                    </View>
+                  </View>
                 </View>
 
                 <View style={styles.infoContainer}>
-                  <View style={styles.nameRow}>
-                    <Text style={styles.name}>{profile.name}, {profile.age}</Text>
-                    {profile.verified && <CheckCircle2 size={16} color={colors.secondary} style={styles.verifiedIcon} />}
+                  <View style={styles.detailRow}>
+                    <Briefcase size={16} color={colors.textLight} />
+                    <Text style={styles.detailText} numberOfLines={1}>{profile.profession}</Text>
                   </View>
 
                   <View style={styles.detailRow}>
-                    <Briefcase size={14} color={colors.textLight} />
-                    <Text style={styles.detailText}>{profile.profession}</Text>
+                    <GraduationCap size={16} color={colors.textLight} />
+                    <Text style={styles.detailText} numberOfLines={1}>{profile.education}</Text>
                   </View>
 
                   <View style={styles.detailRow}>
-                    <GraduationCap size={14} color={colors.textLight} />
-                    <Text style={styles.detailText}>{profile.education}</Text>
-                  </View>
-
-                  <View style={styles.detailRow}>
-                    <MapPin size={14} color={colors.textLight} />
-                    <Text style={styles.detailText}>{profile.city}</Text>
+                    <MapPin size={16} color={colors.textLight} />
+                    <Text style={styles.detailText} numberOfLines={1}>{profile.city}</Text>
                   </View>
 
                   <View style={styles.actionRow}>
@@ -91,11 +110,13 @@ const RecommendedProfiles = () => {
                       <Text style={styles.viewButtonText}>View Profile</Text>
                     </TouchableOpacity>
                     <TouchableOpacity 
-                      style={[styles.interestButton, hasSent && { backgroundColor: colors.textLight }]}
+                      style={[styles.interestButton, hasSent && { backgroundColor: colors.border }]}
                       onPress={() => handleConnect(profile.id)}
                       disabled={hasSent}
                     >
-                      <Text style={styles.interestButtonText}>{hasSent ? 'Sent' : 'Connect'}</Text>
+                      <Text style={[styles.interestButtonText, hasSent && { color: colors.textDark }]}>
+                        {hasSent ? 'Sent' : 'Connect'}
+                      </Text>
                     </TouchableOpacity>
                   </View>
                 </View>
@@ -117,105 +138,139 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 20,
-    marginBottom: 16,
+    marginBottom: 20,
   },
   sectionTitle: {
     ...typography.h3,
+    fontSize: 20,
   },
   seeAll: {
     color: colors.primary,
     fontWeight: 'bold',
+    fontSize: 14,
   },
   scrollContent: {
     paddingHorizontal: 16,
-    paddingBottom: 20, // Add padding bottom for shadow and spacing
+    paddingBottom: 24, 
     paddingTop: 8,
   },
   card: {
-    width: 280,
+    width: CARD_WIDTH,
     backgroundColor: colors.surface,
-    borderRadius: 20,
+    borderRadius: 24,
     marginHorizontal: 8,
-    elevation: 5,
+    elevation: 8,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.12,
+    shadowRadius: 10,
+    overflow: 'hidden',
+  },
+  imageContainer: {
+    position: 'relative',
+    height: 240,
   },
   image: {
     width: '100%',
-    height: 200,
+    height: '100%',
     resizeMode: 'cover',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
+  },
+  imageOverlay: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    height: '50%',
   },
   matchBadge: {
     position: 'absolute',
-    top: 12,
-    left: 12,
-    backgroundColor: 'rgba(0,0,0,0.6)',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 12,
+    top: 16,
+    left: 16,
+    backgroundColor: 'rgba(255,255,255,0.9)',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   matchText: {
-    color: colors.secondary,
+    color: colors.primary,
     fontWeight: 'bold',
     fontSize: 12,
   },
-  infoContainer: {
-    padding: 16,
+  imageContent: {
+    position: 'absolute',
+    bottom: 16,
+    left: 16,
+    right: 16,
   },
   nameRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 8,
   },
   name: {
-    ...typography.h3,
-    fontSize: 18,
+    ...typography.h2,
+    fontSize: 22,
+    color: '#FFF',
+    textShadowColor: 'rgba(0,0,0,0.5)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 3,
   },
   verifiedIcon: {
-    marginLeft: 6,
+    marginLeft: 8,
+  },
+  infoContainer: {
+    padding: 20,
   },
   detailRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 6,
+    marginBottom: 8,
   },
   detailText: {
-    fontSize: 13,
+    fontSize: 14,
     color: colors.textLight,
-    marginLeft: 8,
+    marginLeft: 12,
+    flex: 1,
   },
   actionRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginTop: 16,
+    gap: 12,
   },
   viewButton: {
     flex: 1,
-    paddingVertical: 10,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: colors.primary,
+    paddingVertical: 12,
+    borderRadius: 24,
+    borderWidth: 1.5,
+    borderColor: colors.primaryLight,
     alignItems: 'center',
-    marginRight: 8,
   },
   viewButtonText: {
-    color: colors.primary,
-    fontWeight: '600',
+    color: colors.primaryLight,
+    fontWeight: 'bold',
+    fontSize: 14,
   },
   interestButton: {
     flex: 1,
-    backgroundColor: colors.primary,
-    paddingVertical: 10,
-    borderRadius: 20,
+    backgroundColor: colors.primaryLight,
+    paddingVertical: 12,
+    borderRadius: 24,
     alignItems: 'center',
+    shadowColor: colors.primaryLight,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    elevation: 4,
   },
   interestButtonText: {
     color: '#FFFFFF',
-    fontWeight: '600',
+    fontWeight: 'bold',
+    fontSize: 14,
   },
 });
 

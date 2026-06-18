@@ -12,7 +12,7 @@ const STORIES = [
     coupleNames: 'Rohan & Sneha',
     year: '2025',
     story: 'We met on Rajbhar Matrimonial and instantly connected over our shared love for travel and food. Getting married was the best decision of our lives.',
-    image: 'https://images.unsplash.com/photo-1583939000340-c692c81fb048?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+    image: 'https://images.unsplash.com/photo-1606800052052-a08af7148866?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
   },
   {
     id: '2',

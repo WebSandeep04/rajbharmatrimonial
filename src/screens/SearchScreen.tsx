@@ -11,6 +11,8 @@ import api from '../services/api';
 import { colors } from '../theme/colors';
 import { typography } from '../theme/typography';
 
+import TopAppBar from '../components/home/TopAppBar';
+
 const SearchScreen = () => {
   const navigation = useNavigation<any>();
   const [profiles, setProfiles] = useState<any[]>([]);
@@ -109,31 +111,23 @@ const SearchScreen = () => {
 
   const renderProfile = ({ item }: { item: any }) => (
     <View style={styles.card}>
-      <Image source={{ uri: item.image }} style={styles.image} />
-      
-      <View style={styles.matchBadge}>
-        <Text style={styles.matchText}>{item.matchPercentage}% Match</Text>
+      <View style={styles.imageContainer}>
+        <Image source={{ uri: item.image }} style={styles.image} />
+        <View style={styles.matchBadge}>
+          <Text style={styles.matchText}>{item.matchPercentage}% Match</Text>
+        </View>
       </View>
 
       <View style={styles.infoContainer}>
         <View style={styles.nameRow}>
-          <Text style={styles.name}>{item.name}, {item.age}</Text>
-          {item.verified && <CheckCircle2 size={18} color={colors.secondary} style={styles.verifiedIcon} />}
+          <Text style={styles.name} numberOfLines={1}>{item.name}</Text>
+          {item.verified && <CheckCircle2 size={16} color={colors.secondary} style={styles.verifiedIcon} />}
         </View>
+        <Text style={styles.ageText}>{item.age} yrs • {item.city}</Text>
 
         <View style={styles.detailRow}>
-          <Briefcase size={16} color={colors.textLight} />
-          <Text style={styles.detailText}>{item.profession}</Text>
-        </View>
-
-        <View style={styles.detailRow}>
-          <GraduationCap size={16} color={colors.textLight} />
-          <Text style={styles.detailText}>{item.education}</Text>
-        </View>
-
-        <View style={styles.detailRow}>
-          <MapPin size={16} color={colors.textLight} />
-          <Text style={styles.detailText}>{item.city}</Text>
+          <Briefcase size={14} color={colors.textLight} />
+          <Text style={styles.detailText} numberOfLines={1}>{item.profession}</Text>
         </View>
 
         <TouchableOpacity 
@@ -147,23 +141,24 @@ const SearchScreen = () => {
   );
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
+      <TopAppBar />
       <View style={styles.header}>
         <Text style={typography.h2}>Explore Matches</Text>
         <TouchableOpacity style={styles.filterButtonIcon} onPress={() => setFilterModalVisible(true)}>
-          <Filter size={24} color={colors.primary} />
+          <Filter size={24} color={colors.surface} />
         </TouchableOpacity>
       </View>
 
       {loading || searching ? (
         <View style={styles.centerContainer}>
           <ActivityIndicator size="large" color={colors.primary} />
-          <Text style={{ marginTop: 10, color: colors.textLight }}>Finding your perfect match...</Text>
+          <Text style={{ marginTop: 12, color: colors.textLight, fontSize: 16 }}>Finding your perfect match...</Text>
         </View>
       ) : profiles.length === 0 ? (
         <View style={styles.centerContainer}>
-          <Text style={typography.h3}>No matches found</Text>
-          <Text style={{ color: colors.textLight, marginTop: 8 }}>Try adjusting your filters.</Text>
+          <Text style={typography.h2}>No matches found</Text>
+          <Text style={{ color: colors.textLight, marginTop: 8, marginBottom: 24, fontSize: 16 }}>Try adjusting your filters.</Text>
           <TouchableOpacity style={styles.clearFilterButtonBtn} onPress={clearFilters}>
             <Text style={styles.clearFilterText}>Clear Filters</Text>
           </TouchableOpacity>
@@ -184,6 +179,7 @@ const SearchScreen = () => {
       <Modal visible={filterModalVisible} animationType="slide" transparent={true}>
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
+            <View style={styles.grabHandle} />
             <View style={styles.modalHeader}>
               <Text style={typography.h2}>Filters</Text>
               <TouchableOpacity onPress={() => setFilterModalVisible(false)}>
@@ -264,7 +260,7 @@ const SearchScreen = () => {
           </View>
         </View>
       </Modal>
-    </SafeAreaView>
+    </View>
   );
 };
 
@@ -284,52 +280,58 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 20,
     paddingVertical: 16,
-    backgroundColor: colors.surface,
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
+    backgroundColor: 'transparent',
+    marginBottom: 8,
   },
   filterButtonIcon: {
-    padding: 8,
-    backgroundColor: colors.accentBeige,
-    borderRadius: 12,
+    padding: 10,
+    backgroundColor: colors.primary,
+    borderRadius: 16,
+    shadowColor: colors.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    elevation: 4,
   },
   row: {
     justifyContent: 'space-between',
   },
   listContent: {
-    padding: 16,
+    paddingHorizontal: 16,
+    paddingBottom: 24,
   },
   card: {
     width: '48%',
     backgroundColor: colors.surface,
     borderRadius: 20,
-    marginBottom: 24,
-    elevation: 5,
+    marginBottom: 20,
+    elevation: 6,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,
     shadowRadius: 8,
     overflow: 'hidden',
   },
+  imageContainer: {
+    position: 'relative',
+    height: 160,
+  },
   image: {
     width: '100%',
-    height: 180,
+    height: '100%',
     resizeMode: 'cover',
   },
   matchBadge: {
     position: 'absolute',
     top: 8,
     left: 8,
-    backgroundColor: 'rgba(0,0,0,0.6)',
+    backgroundColor: 'rgba(255,255,255,0.9)',
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 12,
   },
   matchText: {
-    color: colors.secondary,
+    color: colors.primary,
     fontWeight: 'bold',
     fontSize: 10,
   },
@@ -339,52 +341,71 @@ const styles = StyleSheet.create({
   nameRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: 2,
   },
   name: {
     ...typography.h3,
-    fontSize: 16,
+    fontSize: 15,
+    flex: 1,
   },
   verifiedIcon: {
     marginLeft: 4,
   },
+  ageText: {
+    fontSize: 12,
+    color: colors.textLight,
+    marginBottom: 8,
+  },
   detailRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 6,
+    marginBottom: 12,
   },
   detailText: {
     fontSize: 12,
     color: colors.textLight,
-    marginLeft: 8,
+    marginLeft: 6,
+    flex: 1,
   },
   viewButton: {
-    marginTop: 12,
-    backgroundColor: colors.primary,
-    paddingVertical: 10,
-    borderRadius: 10,
+    backgroundColor: colors.primaryLight,
+    paddingVertical: 8,
+    borderRadius: 16,
     alignItems: 'center',
   },
   viewButtonText: {
     color: '#FFF',
     fontSize: 12,
-    fontWeight: '600',
+    fontWeight: 'bold',
   },
   
   // Modal Styles
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
+    backgroundColor: 'rgba(0,0,0,0.6)',
     justifyContent: 'flex-end',
   },
   modalContent: {
     backgroundColor: colors.surface,
-    borderTopLeftRadius: 30,
-    borderTopRightRadius: 30,
+    borderTopLeftRadius: 32,
+    borderTopRightRadius: 32,
     paddingHorizontal: 24,
     paddingBottom: 40,
-    paddingTop: 24,
-    maxHeight: '80%',
+    paddingTop: 16,
+    maxHeight: '85%',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 12,
+    elevation: 10,
+  },
+  grabHandle: {
+    width: 40,
+    height: 5,
+    backgroundColor: '#E0E0E0',
+    borderRadius: 3,
+    alignSelf: 'center',
+    marginBottom: 20,
   },
   modalHeader: {
     flexDirection: 'row',
@@ -395,54 +416,59 @@ const styles = StyleSheet.create({
   sectionHeader: {
     ...typography.h3,
     color: colors.primary,
-    marginTop: 16,
-    marginBottom: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-    paddingBottom: 4,
+    marginTop: 20,
+    marginBottom: 16,
+    paddingBottom: 8,
   },
   inputGroup: {
-    marginBottom: 16,
+    marginBottom: 20,
   },
   label: {
     fontSize: 14,
     fontWeight: '600',
     color: colors.textDark,
-    marginBottom: 8,
+    marginBottom: 10,
   },
   pickerContainer: {
-    backgroundColor: '#F5F5F5',
-    borderRadius: 12,
+    backgroundColor: colors.background,
+    borderRadius: 16,
     overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: colors.border,
   },
   modalFooter: {
     flexDirection: 'row',
-    marginTop: 20,
+    marginTop: 24,
     justifyContent: 'space-between',
+    gap: 16,
   },
   clearFilterButtonBtn: {
     flex: 1,
     paddingVertical: 16,
     alignItems: 'center',
-    marginRight: 10,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: colors.border,
+    borderRadius: 16,
+    backgroundColor: colors.background,
   },
   clearFilterText: {
     color: colors.textDark,
-    fontWeight: '600',
+    fontWeight: 'bold',
+    fontSize: 16,
   },
   applyFilterButton: {
     flex: 2,
     backgroundColor: colors.primary,
     paddingVertical: 16,
     alignItems: 'center',
-    borderRadius: 12,
+    borderRadius: 16,
+    shadowColor: colors.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    elevation: 4,
   },
   applyFilterText: {
     color: '#FFF',
-    fontWeight: '600',
+    fontWeight: 'bold',
     fontSize: 16,
   },
 });

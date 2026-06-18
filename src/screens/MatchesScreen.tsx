@@ -7,6 +7,8 @@ import api from '../services/api';
 import { colors } from '../theme/colors';
 import { typography } from '../theme/typography';
 
+import TopAppBar from '../components/home/TopAppBar';
+
 const MatchesScreen = () => {
   const navigation = useNavigation<any>();
   const [activeTab, setActiveTab] = useState<'connections' | 'requests'>('connections');
@@ -91,7 +93,8 @@ const MatchesScreen = () => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
+      <TopAppBar />
       <View style={styles.header}>
         <Text style={typography.h2}>Connections</Text>
       </View>
@@ -102,7 +105,7 @@ const MatchesScreen = () => {
           onPress={() => setActiveTab('connections')}
         >
           <Text style={[styles.tabText, activeTab === 'connections' && styles.activeTabText]}>
-            My Connections
+            My Connections ({connections.length > 99 ? '99+' : connections.length})
           </Text>
         </TouchableOpacity>
         <TouchableOpacity 
@@ -110,7 +113,7 @@ const MatchesScreen = () => {
           onPress={() => setActiveTab('requests')}
         >
           <Text style={[styles.tabText, activeTab === 'requests' && styles.activeTabText]}>
-            Requests ({requests.length})
+            Requests ({requests.length > 99 ? '99+' : requests.length})
           </Text>
         </TouchableOpacity>
       </View>
@@ -151,7 +154,7 @@ const MatchesScreen = () => {
           </View>
         )
       )}
-    </SafeAreaView>
+    </View>
   );
 };
 
