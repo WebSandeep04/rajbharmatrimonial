@@ -44,15 +44,8 @@ const UserModal: React.FC<UserModalProps> = ({ isOpen, onClose, onSave, user }) 
     const fetchMasterData = async () => {
       try {
         setLoadingMasterData(true);
-        const promises = MASTER_ENDPOINTS.map(endpoint => api.get(`/admin/${endpoint}-masters`));
-        const results = await Promise.all(promises);
-        
-        const newOptions: Record<string, any[]> = {};
-        MASTER_ENDPOINTS.forEach((endpoint, index) => {
-          newOptions[endpoint] = results[index].data;
-        });
-        
-        setMasterDataOptions(newOptions);
+        const response = await api.get(`/master-data`);
+        setMasterDataOptions(response.data);
       } catch (err) {
         console.error('Failed to fetch master data options', err);
       } finally {
@@ -139,24 +132,36 @@ const UserModal: React.FC<UserModalProps> = ({ isOpen, onClose, onSave, user }) 
     }
   };
 
-  const renderDropdown = (field: string, label: string) => (
-    <div className="form-group" key={field}>
-      <label htmlFor={`${field}_id`}>{label}</label>
-      <select 
-        id={`${field}_id`} 
-        className="form-input" 
-        value={formData[`${field}_id`]} 
-        onChange={handleChange}
-      >
-        <option value="">Select {label}</option>
-        {masterDataOptions[field]?.map((option: any) => (
-          <option key={option.id} value={option.id}>
-            {option.name}
-          </option>
-        ))}
-      </select>
-    </div>
-  );
+  const renderDropdown = (field: string, label: string) => {
+    let options = masterDataOptions[field] || [];
+    
+    if (field === 'city' && formData.state_id) {
+      // Cast both to String to ensure strict equality check passes if one is a number and other is string
+      options = options.filter((opt: any) => String(opt.state_id) === String(formData.state_id));
+    } else if (field === 'city') {
+      options = [];
+    }
+
+    return (
+      <div className="form-group" key={field}>
+        <label htmlFor={`${field}_id`}>{label}</label>
+        <select 
+          id={`${field}_id`} 
+          className="form-input" 
+          value={formData[`${field}_id`]} 
+          onChange={handleChange}
+          required
+        >
+          <option value="">Select {label}</option>
+          {options.map((option: any) => (
+            <option key={option.id} value={option.id}>
+              {option.name}
+            </option>
+          ))}
+        </select>
+      </div>
+    );
+  };
 
   return (
     <div className="modal-overlay">
@@ -215,35 +220,35 @@ const UserModal: React.FC<UserModalProps> = ({ isOpen, onClose, onSave, user }) 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem', marginBottom: '1.5rem' }}>
               <div className="form-group">
                 <label htmlFor="height">Height</label>
-                <input type="text" id="height" className="form-input" value={formData.height} onChange={handleChange} />
+                <input type="text" id="height" className="form-input" value={formData.height} onChange={handleChange} required />
               </div>
               <div className="form-group">
                 <label htmlFor="weight">Weight</label>
-                <input type="text" id="weight" className="form-input" value={formData.weight} onChange={handleChange} />
+                <input type="text" id="weight" className="form-input" value={formData.weight} onChange={handleChange} required />
               </div>
               <div className="form-group">
                 <label htmlFor="no_of_brothers">No of Brothers</label>
-                <input type="number" id="no_of_brothers" className="form-input" value={formData.no_of_brothers} onChange={handleChange} />
+                <input type="number" id="no_of_brothers" className="form-input" value={formData.no_of_brothers} onChange={handleChange} required />
               </div>
               <div className="form-group">
                 <label htmlFor="no_of_sisters">No of Sisters</label>
-                <input type="number" id="no_of_sisters" className="form-input" value={formData.no_of_sisters} onChange={handleChange} />
+                <input type="number" id="no_of_sisters" className="form-input" value={formData.no_of_sisters} onChange={handleChange} required />
               </div>
               <div className="form-group">
                 <label htmlFor="mother_name">Mother Name</label>
-                <input type="text" id="mother_name" className="form-input" value={formData.mother_name} onChange={handleChange} />
+                <input type="text" id="mother_name" className="form-input" value={formData.mother_name} onChange={handleChange} required />
               </div>
               <div className="form-group">
                 <label htmlFor="father_name">Father Name</label>
-                <input type="text" id="father_name" className="form-input" value={formData.father_name} onChange={handleChange} />
+                <input type="text" id="father_name" className="form-input" value={formData.father_name} onChange={handleChange} required />
               </div>
               <div className="form-group">
                 <label htmlFor="mother_occupation">Mother Occupation</label>
-                <input type="text" id="mother_occupation" className="form-input" value={formData.mother_occupation} onChange={handleChange} />
+                <input type="text" id="mother_occupation" className="form-input" value={formData.mother_occupation} onChange={handleChange} required />
               </div>
               <div className="form-group">
                 <label htmlFor="father_occupation">Father Occupation</label>
-                <input type="text" id="father_occupation" className="form-input" value={formData.father_occupation} onChange={handleChange} />
+                <input type="text" id="father_occupation" className="form-input" value={formData.father_occupation} onChange={handleChange} required />
               </div>
             </div>
 
@@ -269,7 +274,7 @@ const UserModal: React.FC<UserModalProps> = ({ isOpen, onClose, onSave, user }) 
 
             <div className="form-group">
               <label htmlFor="bio">Bio</label>
-              <textarea id="bio" className="form-input" value={formData.bio} onChange={handleChange} rows={3} />
+              <textarea id="bio" className="form-input" value={formData.bio} onChange={handleChange} rows={3} required />
             </div>
 
             {error && (

@@ -57,10 +57,13 @@ const LoginScreen = () => {
         await AsyncStorage.setItem('userToken', response.data.token);
         await AsyncStorage.setItem('userInfo', JSON.stringify(response.data.user));
 
+        const user = response.data.user;
+        const isProfileComplete = !!user.religion_id;
+
         navigation.dispatch(
           CommonActions.reset({
             index: 0,
-            routes: [{ name: 'Main' }],
+            routes: [{ name: isProfileComplete ? 'Main' : 'ProfileSetup' }],
           })
         );
       } else {

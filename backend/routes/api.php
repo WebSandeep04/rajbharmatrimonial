@@ -22,7 +22,10 @@ Route::get('/user', function (Request $request) {
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/profile', [AuthController::class, 'profile']);
+    Route::put('/profile', [AuthController::class, 'updateProfile']);
 });
+
+Route::get('/master-data', [\App\Http\Controllers\Api\MasterDataController::class, 'all']);
 
 Route::prefix('admin')->group(function () {
     Route::post('/login', [AdminAdminAuthController::class, 'login']);

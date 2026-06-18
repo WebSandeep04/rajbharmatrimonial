@@ -82,4 +82,46 @@ class AuthController extends Controller
     {
         return response()->json(['user' => $request->user()]);
     }
+
+    public function updateProfile(Request $request)
+    {
+        $user = $request->user();
+
+        $rules = [
+            'religion_id' => 'required|integer',
+            'caste_id' => 'required|integer',
+            'gotra_id' => 'required|integer',
+            'nakshatra_id' => 'required|integer',
+            'rashi_id' => 'required|integer',
+            'state_id' => 'required|integer',
+            'city_id' => 'required|integer',
+            'highest_education_id' => 'required|integer',
+            'profession_id' => 'required|integer',
+            'income_range_id' => 'required|integer',
+            'body_type_id' => 'required|integer',
+            'complexion_id' => 'required|integer',
+            'blood_group_id' => 'required|integer',
+            'diet_id' => 'required|integer',
+            'marital_status_id' => 'required|integer',
+            'family_type_id' => 'required|integer',
+            'profile_created_for_id' => 'required|integer',
+            'smoking' => 'required|boolean',
+            'drinking' => 'required|boolean',
+            'manglik_status' => 'required|boolean',
+            'no_of_brothers' => 'required|integer',
+            'no_of_sisters' => 'required|integer',
+            'height' => 'required|string',
+            'weight' => 'required|string',
+            'mother_occupation' => 'required|string',
+            'father_occupation' => 'required|string',
+            'mother_name' => 'required|string',
+            'father_name' => 'required|string',
+            'bio' => 'required|string',
+        ];
+
+        $validated = $request->validate($rules);
+        $user->update($validated);
+
+        return response()->json(['message' => 'Profile updated successfully', 'user' => $user]);
+    }
 }
