@@ -1,35 +1,30 @@
-import React from 'react';
-import { View, Text, StyleSheet, Image, ScrollView, TouchableOpacity } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, Text, StyleSheet, Image, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { CheckCircle2, MapPin, Briefcase, GraduationCap } from 'lucide-react-native';
+import { useNavigation } from '@react-navigation/native';
+import api from '../../services/api';
 import { colors } from '../../theme/colors';
 import { typography } from '../../theme/typography';
 
-const MOCK_PROFILES = [
-  {
-    id: '1',
-    name: 'Priya Sharma',
-    age: 26,
-    city: 'Mumbai',
-    profession: 'Software Engineer',
-    education: 'B.Tech',
-    matchPercentage: 95,
-    verified: true,
-    image: 'https://randomuser.me/api/portraits/women/44.jpg',
-  },
-  {
-    id: '2',
-    name: 'Anjali Verma',
-    age: 25,
-    city: 'Delhi',
-    profession: 'Marketing Manager',
-    education: 'MBA',
-    matchPercentage: 88,
-    verified: true,
-    image: 'https://randomuser.me/api/portraits/women/68.jpg',
-  },
-];
-
 const RecommendedProfiles = () => {
+  const [profiles, setProfiles] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const navigation = useNavigation<any>();
+
+  useEffect(() => {
+    const fetchMatches = async () => {
+      try {
+        const response = await api.get('/matches');
+        setProfiles(response.data);
+      } catch (err) {
+        console.error('Failed to fetch matches', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchMatches();
+  }, []);
+
   return (
     <View style={styles.container}>
       <View style={styles.headerRow}>
@@ -39,48 +34,57 @@ const RecommendedProfiles = () => {
         </TouchableOpacity>
       </View>
       
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
-        {MOCK_PROFILES.map((profile) => (
-          <View key={profile.id} style={styles.card}>
-            <Image source={{ uri: profile.image }} style={styles.image} />
-            
-            <View style={styles.matchBadge}>
-              <Text style={styles.matchText}>{profile.matchPercentage}% Match</Text>
+      {loading ? (
+        <ActivityIndicator size="small" color={colors.primary} style={{ margin: 20 }} />
+      ) : profiles.length === 0 ? (
+        <Text style={{ textAlign: 'center', margin: 20, color: colors.textLight }}>No matches found yet.</Text>
+      ) : (
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
+          {profiles.map((profile) => (
+            <View key={profile.id} style={styles.card}>
+              <Image source={{ uri: profile.image }} style={styles.image} />
+              
+              <View style={styles.matchBadge}>
+                <Text style={styles.matchText}>{profile.matchPercentage}% Match</Text>
+              </View>
+
+              <View style={styles.infoContainer}>
+                <View style={styles.nameRow}>
+                  <Text style={styles.name}>{profile.name}, {profile.age}</Text>
+                  {profile.verified && <CheckCircle2 size={16} color={colors.secondary} style={styles.verifiedIcon} />}
+                </View>
+
+                <View style={styles.detailRow}>
+                  <Briefcase size={14} color={colors.textLight} />
+                  <Text style={styles.detailText}>{profile.profession}</Text>
+                </View>
+
+                <View style={styles.detailRow}>
+                  <GraduationCap size={14} color={colors.textLight} />
+                  <Text style={styles.detailText}>{profile.education}</Text>
+                </View>
+
+                <View style={styles.detailRow}>
+                  <MapPin size={14} color={colors.textLight} />
+                  <Text style={styles.detailText}>{profile.city}</Text>
+                </View>
+
+                <View style={styles.actionRow}>
+                  <TouchableOpacity 
+                    style={styles.viewButton}
+                    onPress={() => navigation.navigate('UserProfile', { userId: profile.id })}
+                  >
+                    <Text style={styles.viewButtonText}>View Profile</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity style={styles.interestButton}>
+                    <Text style={styles.interestButtonText}>Connect</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
             </View>
-
-            <View style={styles.infoContainer}>
-              <View style={styles.nameRow}>
-                <Text style={styles.name}>{profile.name}, {profile.age}</Text>
-                {profile.verified && <CheckCircle2 size={16} color={colors.secondary} style={styles.verifiedIcon} />}
-              </View>
-
-              <View style={styles.detailRow}>
-                <Briefcase size={14} color={colors.textLight} />
-                <Text style={styles.detailText}>{profile.profession}</Text>
-              </View>
-
-              <View style={styles.detailRow}>
-                <GraduationCap size={14} color={colors.textLight} />
-                <Text style={styles.detailText}>{profile.education}</Text>
-              </View>
-
-              <View style={styles.detailRow}>
-                <MapPin size={14} color={colors.textLight} />
-                <Text style={styles.detailText}>{profile.city}</Text>
-              </View>
-
-              <View style={styles.actionRow}>
-                <TouchableOpacity style={styles.viewButton}>
-                  <Text style={styles.viewButtonText}>View Profile</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.interestButton}>
-                  <Text style={styles.interestButtonText}>Connect</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          </View>
-        ))}
-      </ScrollView>
+          ))}
+        </ScrollView>
+      )}
     </View>
   );
 };

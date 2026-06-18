@@ -23,6 +23,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/profile', [AuthController::class, 'profile']);
     Route::put('/profile', [AuthController::class, 'updateProfile']);
+    Route::get('/matches', [\App\Http\Controllers\Api\MatchController::class, 'getRecommendedMatches']);
+    Route::get('/users/{id}', [\App\Http\Controllers\Api\MatchController::class, 'getUserProfile']);
 });
 
 Route::get('/master-data', [\App\Http\Controllers\Api\MasterDataController::class, 'all']);

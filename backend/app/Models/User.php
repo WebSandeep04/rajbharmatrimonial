@@ -86,4 +86,22 @@ class User extends Authenticatable
             'verification' => 'boolean',
         ];
     }
+
+    public function religion() { return $this->belongsTo(ReligionMaster::class); }
+    public function caste() { return $this->belongsTo(CasteMaster::class); }
+    public function gotra() { return $this->belongsTo(GotraMaster::class); }
+    public function nakshatra() { return $this->belongsTo(NakshatraMaster::class); }
+    public function rashi() { return $this->belongsTo(RashiMaster::class); }
+    public function state() { return $this->belongsTo(StateMaster::class); }
+    public function city() { return $this->belongsTo(CityMaster::class); }
+    public function highest_education() { return $this->belongsTo(HighestEducationMaster::class); }
+    public function profession() { return $this->belongsTo(ProfessionMaster::class); }
+    public function income_range() { return $this->belongsTo(IncomeRangeMaster::class); }
+    public function body_type() { return $this->belongsTo(BodyTypeMaster::class); }
+    public function complexion() { return $this->belongsTo(ComplexionMaster::class); }
+    public function blood_group() { return $this->belongsTo(BloodGroupMaster::class); }
+    public function diet() { return $this->belongsTo(DietMaster::class); }
+    public function marital_status() { return $this->belongsTo(MaritalStatusMaster::class); }
+    public function family_type() { return $this->belongsTo(FamilyTypeMaster::class); }
+    public function profile_created_for() { return $this->belongsTo(ProfileCreatedForMaster::class); }
 }
