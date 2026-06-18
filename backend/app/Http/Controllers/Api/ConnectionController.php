@@ -108,7 +108,7 @@ class ConnectionController extends Controller
         }
 
         if ($connection->status === 'pending') {
-            if ($connection->sender_id === $currentUserId) {
+            if ($connection->sender_id == $currentUserId) {
                 return response()->json(['status' => 'request_sent', 'connection_id' => $connection->id]);
             } else {
                 return response()->json(['status' => 'request_received', 'connection_id' => $connection->id]);

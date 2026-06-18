@@ -25,6 +25,18 @@ const RecommendedProfiles = () => {
     fetchMatches();
   }, []);
 
+  const [sentRequests, setSentRequests] = useState<number[]>([]);
+
+  const handleConnect = async (userId: number) => {
+    if (sentRequests.includes(userId)) return;
+    try {
+      await api.post('/connections/send', { receiver_id: userId });
+      setSentRequests(prev => [...prev, userId]);
+    } catch (err) {
+      console.error('Failed to send connection request', err);
+    }
+  };
+
   return (
     <View style={styles.container}>
       <View style={styles.headerRow}>
@@ -40,49 +52,56 @@ const RecommendedProfiles = () => {
         <Text style={{ textAlign: 'center', margin: 20, color: colors.textLight }}>No matches found yet.</Text>
       ) : (
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
-          {profiles.map((profile) => (
-            <View key={profile.id} style={styles.card}>
-              <Image source={{ uri: profile.image }} style={styles.image} />
-              
-              <View style={styles.matchBadge}>
-                <Text style={styles.matchText}>{profile.matchPercentage}% Match</Text>
+          {profiles.map((profile) => {
+            const hasSent = sentRequests.includes(profile.id);
+            return (
+              <View key={profile.id} style={styles.card}>
+                <Image source={{ uri: profile.image }} style={styles.image} />
+                
+                <View style={styles.matchBadge}>
+                  <Text style={styles.matchText}>{profile.matchPercentage}% Match</Text>
+                </View>
+
+                <View style={styles.infoContainer}>
+                  <View style={styles.nameRow}>
+                    <Text style={styles.name}>{profile.name}, {profile.age}</Text>
+                    {profile.verified && <CheckCircle2 size={16} color={colors.secondary} style={styles.verifiedIcon} />}
+                  </View>
+
+                  <View style={styles.detailRow}>
+                    <Briefcase size={14} color={colors.textLight} />
+                    <Text style={styles.detailText}>{profile.profession}</Text>
+                  </View>
+
+                  <View style={styles.detailRow}>
+                    <GraduationCap size={14} color={colors.textLight} />
+                    <Text style={styles.detailText}>{profile.education}</Text>
+                  </View>
+
+                  <View style={styles.detailRow}>
+                    <MapPin size={14} color={colors.textLight} />
+                    <Text style={styles.detailText}>{profile.city}</Text>
+                  </View>
+
+                  <View style={styles.actionRow}>
+                    <TouchableOpacity 
+                      style={styles.viewButton}
+                      onPress={() => navigation.navigate('UserProfile', { userId: profile.id })}
+                    >
+                      <Text style={styles.viewButtonText}>View Profile</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity 
+                      style={[styles.interestButton, hasSent && { backgroundColor: colors.textLight }]}
+                      onPress={() => handleConnect(profile.id)}
+                      disabled={hasSent}
+                    >
+                      <Text style={styles.interestButtonText}>{hasSent ? 'Sent' : 'Connect'}</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
               </View>
-
-              <View style={styles.infoContainer}>
-                <View style={styles.nameRow}>
-                  <Text style={styles.name}>{profile.name}, {profile.age}</Text>
-                  {profile.verified && <CheckCircle2 size={16} color={colors.secondary} style={styles.verifiedIcon} />}
-                </View>
-
-                <View style={styles.detailRow}>
-                  <Briefcase size={14} color={colors.textLight} />
-                  <Text style={styles.detailText}>{profile.profession}</Text>
-                </View>
-
-                <View style={styles.detailRow}>
-                  <GraduationCap size={14} color={colors.textLight} />
-                  <Text style={styles.detailText}>{profile.education}</Text>
-                </View>
-
-                <View style={styles.detailRow}>
-                  <MapPin size={14} color={colors.textLight} />
-                  <Text style={styles.detailText}>{profile.city}</Text>
-                </View>
-
-                <View style={styles.actionRow}>
-                  <TouchableOpacity 
-                    style={styles.viewButton}
-                    onPress={() => navigation.navigate('UserProfile', { userId: profile.id })}
-                  >
-                    <Text style={styles.viewButtonText}>View Profile</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity style={styles.interestButton}>
-                    <Text style={styles.interestButtonText}>Connect</Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
-            </View>
-          ))}
+            );
+          })}
         </ScrollView>
       )}
     </View>

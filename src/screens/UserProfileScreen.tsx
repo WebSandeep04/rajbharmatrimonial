@@ -165,21 +165,23 @@ const UserProfileScreen = () => {
         </View>
       </ScrollView>
 
-      <View style={styles.footer}>
-        <TouchableOpacity 
-          style={[styles.connectButton, connectionStatus === 'request_sent' && styles.connectButtonDisabled]} 
-          onPress={handleConnect}
-          disabled={connectionStatus === 'request_sent' || connecting}
-        >
-          <Text style={styles.connectButtonText}>
-            {connecting ? 'Processing...' : 
-             connectionStatus === 'none' ? 'Connect Now' :
-             connectionStatus === 'request_sent' ? 'Request Sent' :
-             connectionStatus === 'request_received' ? 'Accept Request' :
-             'Connected'}
-          </Text>
-        </TouchableOpacity>
-      </View>
+      {connectionStatus !== 'connected' && (
+        <View style={styles.footer}>
+          <TouchableOpacity 
+            style={[styles.connectButton, connectionStatus === 'request_sent' && styles.connectButtonDisabled]} 
+            onPress={handleConnect}
+            disabled={connectionStatus === 'request_sent' || connecting}
+          >
+            <Text style={styles.connectButtonText}>
+              {connecting ? 'Processing...' : 
+               connectionStatus === 'none' ? 'Connect Now' :
+               connectionStatus === 'request_sent' ? 'Request Sent' :
+               connectionStatus === 'request_received' ? 'Accept Request' :
+               'Connected'}
+            </Text>
+          </TouchableOpacity>
+        </View>
+      )}
     </SafeAreaView>
   );
 };

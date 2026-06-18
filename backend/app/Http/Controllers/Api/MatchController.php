@@ -12,10 +12,16 @@ class MatchController extends Controller
     {
         $currentUser = $request->user();
 
-        // Fetch users except current user, ideally opposite gender, but we'll fetch all active for now
+        // Fetch users except current user, and exclude those who already have a connection
         $matches = User::with(['city', 'profession', 'highest_education'])
             ->where('id', '!=', $currentUser->id)
             ->where('is_active', true)
+            ->whereNotIn('id', function($query) use ($currentUser) {
+                $query->select('receiver_id')->from('connections')->where('sender_id', $currentUser->id)
+                      ->union(
+                          \Illuminate\Support\Facades\DB::table('connections')->select('sender_id')->where('receiver_id', $currentUser->id)
+                      );
+            })
             ->limit(10)
             ->get()
             ->map(function ($user) {
