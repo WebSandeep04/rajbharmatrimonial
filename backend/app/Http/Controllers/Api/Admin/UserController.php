@@ -22,12 +22,11 @@ class UserController extends Controller
             'password' => 'required|string|min:8',
         ]);
 
-        $user = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
-            'is_active' => true,
-        ]);
+        $data = $request->except('password');
+        $data['password'] = Hash::make($request->password);
+        $data['is_active'] = true;
+
+        $user = User::create($data);
 
         return response()->json($user, 201);
     }
@@ -42,14 +41,13 @@ class UserController extends Controller
             'password' => 'nullable|string|min:8',
         ]);
 
-        $user->name = $request->name;
-        $user->email = $request->email;
+        $data = $request->except('password');
         
         if ($request->filled('password')) {
-            $user->password = Hash::make($request->password);
+            $data['password'] = Hash::make($request->password);
         }
 
-        $user->save();
+        $user->update($data);
 
         return response()->json($user);
     }

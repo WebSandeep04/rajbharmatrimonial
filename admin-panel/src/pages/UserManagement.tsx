@@ -9,6 +9,36 @@ interface User {
   email: string;
   is_active: boolean;
   created_at: string;
+  religion_id?: number | null;
+  caste_id?: number | null;
+  gotra_id?: number | null;
+  nakshatra_id?: number | null;
+  rashi_id?: number | null;
+  state_id?: number | null;
+  city_id?: number | null;
+  highest_education_id?: number | null;
+  profession_id?: number | null;
+  income_range_id?: number | null;
+  body_type_id?: number | null;
+  complexion_id?: number | null;
+  blood_group_id?: number | null;
+  diet_id?: number | null;
+  marital_status_id?: number | null;
+  family_type_id?: number | null;
+  profile_created_for_id?: number | null;
+  smoking?: boolean;
+  drinking?: boolean;
+  manglik_status?: boolean;
+  verification?: boolean;
+  no_of_brothers?: number | null;
+  no_of_sisters?: number | null;
+  height?: string | null;
+  weight?: string | null;
+  mother_occupation?: string | null;
+  father_occupation?: string | null;
+  mother_name?: string | null;
+  father_name?: string | null;
+  bio?: string | null;
 }
 
 const UserManagement: React.FC = () => {
