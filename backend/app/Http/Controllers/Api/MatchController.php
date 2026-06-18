@@ -94,7 +94,7 @@ class MatchController extends Controller
         $user = User::with([
             'religion', 'caste', 'gotra', 'nakshatra', 'rashi', 'state', 'city',
             'highest_education', 'profession', 'income_range', 'body_type',
-            'complexion', 'blood_group', 'diet', 'marital_status', 'family_type', 'profile_created_for'
+            'complexion', 'blood_group', 'diet', 'marital_status', 'family_type', 'profile_created_for', 'images'
         ])->findOrFail($id);
 
         return response()->json([
@@ -138,6 +138,7 @@ class MatchController extends Controller
             'bio' => $user->bio,
             'verified' => (bool)$user->verification,
             'image' => $user->profile_photo ?: 'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png',
+            'gallery' => $user->images->map(function($img) { return $img->image_path; }),
         ]);
     }
 }

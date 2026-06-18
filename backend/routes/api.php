@@ -32,6 +32,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/connections/pending', [\App\Http\Controllers\Api\ConnectionController::class, 'getPendingRequests']);
     Route::get('/connections', [\App\Http\Controllers\Api\ConnectionController::class, 'getConnections']);
     Route::get('/connections/status/{userId}', [\App\Http\Controllers\Api\ConnectionController::class, 'getConnectionStatus']);
+
+    // User Images
+    Route::get('/user/images', [\App\Http\Controllers\Api\UserImageController::class, 'index']);
+    Route::post('/user/images', [\App\Http\Controllers\Api\UserImageController::class, 'store']);
+    Route::post('/user/profile-photo', [\App\Http\Controllers\Api\UserImageController::class, 'uploadProfilePhoto']);
+    Route::delete('/user/images/{id}', [\App\Http\Controllers\Api\UserImageController::class, 'destroy']);
 });
 
 Route::get('/master-data', [\App\Http\Controllers\Api\MasterDataController::class, 'all']);

@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, Image, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, Image, ScrollView, TouchableOpacity, ActivityIndicator, Modal } from 'react-native';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { ChevronLeft, MapPin, Briefcase, GraduationCap, CheckCircle2 } from 'lucide-react-native';
+import { ChevronLeft, MapPin, Briefcase, GraduationCap, CheckCircle2, X } from 'lucide-react-native';
 import api from '../services/api';
 import { colors } from '../theme/colors';
 import { typography } from '../theme/typography';
@@ -17,6 +17,7 @@ const UserProfileScreen = () => {
   const [connectionStatus, setConnectionStatus] = useState('none');
   const [connectionId, setConnectionId] = useState<number | null>(null);
   const [connecting, setConnecting] = useState(false);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -79,7 +80,9 @@ const UserProfileScreen = () => {
     <SafeAreaView style={styles.container}>
       <ScrollView showsVerticalScrollIndicator={false}>
         <View style={styles.imageContainer}>
-          <Image source={{ uri: profile.image }} style={styles.image} />
+          <TouchableOpacity activeOpacity={0.9} onPress={() => setSelectedImage(profile.image)}>
+            <Image source={{ uri: profile.image }} style={styles.image} />
+          </TouchableOpacity>
           <TouchableOpacity 
             style={styles.backButton}
             onPress={() => navigation.goBack()}
@@ -114,6 +117,19 @@ const UserProfileScreen = () => {
             <Text style={styles.sectionTitle}>About {profile.name.split(' ')[0]}</Text>
             <Text style={styles.bioText}>{profile.bio || 'This user has not written a bio yet.'}</Text>
           </View>
+
+          {profile.gallery && profile.gallery.length > 0 && (
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Photos</Text>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.galleryContainer}>
+                {profile.gallery.map((imgUri: string, idx: number) => (
+                  <TouchableOpacity key={idx} style={styles.galleryImageWrapper} activeOpacity={0.9} onPress={() => setSelectedImage(imgUri)}>
+                    <Image source={{ uri: imgUri }} style={styles.galleryImage} />
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+            </View>
+          )}
 
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Religious Details</Text>
@@ -182,6 +198,16 @@ const UserProfileScreen = () => {
           </TouchableOpacity>
         </View>
       )}
+
+      <Modal visible={!!selectedImage} transparent={true} animationType="fade" onRequestClose={() => setSelectedImage(null)}>
+        <View style={styles.modalBackground}>
+          <TouchableOpacity style={styles.closeModalButton} onPress={() => setSelectedImage(null)}>
+            <X size={28} color="#FFF" />
+          </TouchableOpacity>
+          <Image source={{ uri: selectedImage || '' }} style={styles.fullScreenImage} />
+        </View>
+      </Modal>
+
     </SafeAreaView>
   );
 };
@@ -272,6 +298,27 @@ const styles = StyleSheet.create({
     ...typography.body,
     lineHeight: 24,
   },
+  galleryContainer: {
+    paddingVertical: 8,
+  },
+  galleryImageWrapper: {
+    width: 140,
+    height: 180,
+    marginRight: 12,
+    borderRadius: 12,
+    overflow: 'hidden',
+    backgroundColor: colors.surface,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+  },
+  galleryImage: {
+    width: '100%',
+    height: '100%',
+    resizeMode: 'cover',
+  },
   detailsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -312,6 +359,24 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 18,
     fontWeight: 'bold',
+  },
+  modalBackground: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.95)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  closeModalButton: {
+    position: 'absolute',
+    top: 40,
+    right: 20,
+    zIndex: 10,
+    padding: 8,
+  },
+  fullScreenImage: {
+    width: '100%',
+    height: '80%',
+    resizeMode: 'contain',
   },
 });
 

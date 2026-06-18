@@ -104,4 +104,9 @@ class User extends Authenticatable
     public function marital_status() { return $this->belongsTo(MaritalStatusMaster::class); }
     public function family_type() { return $this->belongsTo(FamilyTypeMaster::class); }
     public function profile_created_for() { return $this->belongsTo(ProfileCreatedForMaster::class); }
+
+    public function images()
+    {
+        return $this->hasMany(UserImage::class);
+    }
 }
