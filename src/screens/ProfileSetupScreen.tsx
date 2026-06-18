@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Picker } from '@react-native-picker/picker';
-import { useNavigation, CommonActions } from '@react-navigation/native';
+import { useNavigation, useRoute, CommonActions } from '@react-navigation/native';
 import api from '../services/api';
 import { colors } from '../theme/colors';
 import { typography } from '../theme/typography';
@@ -25,6 +25,9 @@ const MASTER_ENDPOINTS = [
 
 const ProfileSetupScreen = () => {
   const navigation = useNavigation();
+  const route = useRoute<any>();
+  const isEditing = route.params?.isEditing;
+
   const [loading, setLoading] = useState(false);
   const [loadingMasterData, setLoadingMasterData] = useState(true);
   const [masterDataOptions, setMasterDataOptions] = useState<Record<string, any[]>>({});
@@ -40,18 +43,58 @@ const ProfileSetupScreen = () => {
   });
 
   useEffect(() => {
-    const fetchMasterData = async () => {
+    const fetchData = async () => {
       try {
-        const response = await api.get('/master-data');
-        setMasterDataOptions(response.data);
+        const [masterRes, profileRes] = await Promise.all([
+          api.get('/master-data'),
+          api.get('/profile')
+        ]);
+        
+        setMasterDataOptions(masterRes.data);
+        
+        if (profileRes.data?.user) {
+          const user = profileRes.data.user;
+          setFormData({
+            smoking: user.smoking || false,
+            drinking: user.drinking || false,
+            manglik_status: user.manglik_status || false,
+            verification: user.verification || false,
+            no_of_brothers: user.no_of_brothers ?? '',
+            no_of_sisters: user.no_of_sisters ?? '',
+            height: user.height || '',
+            weight: user.weight || '',
+            mother_occupation: user.mother_occupation || '',
+            father_occupation: user.father_occupation || '',
+            mother_name: user.mother_name || '',
+            father_name: user.father_name || '',
+            bio: user.bio || '',
+            religion_id: user.religion_id || '',
+            caste_id: user.caste_id || '',
+            gotra_id: user.gotra_id || '',
+            nakshatra_id: user.nakshatra_id || '',
+            rashi_id: user.rashi_id || '',
+            state_id: user.state_id || '',
+            city_id: user.city_id || '',
+            highest_education_id: user.highest_education_id || '',
+            profession_id: user.profession_id || '',
+            income_range_id: user.income_range_id || '',
+            body_type_id: user.body_type_id || '',
+            complexion_id: user.complexion_id || '',
+            blood_group_id: user.blood_group_id || '',
+            diet_id: user.diet_id || '',
+            marital_status_id: user.marital_status_id || '',
+            family_type_id: user.family_type_id || '',
+            profile_created_for_id: user.profile_created_for_id || ''
+          });
+        }
       } catch (err) {
-        Alert.alert('Error', 'Failed to load options. Please check your connection.');
+        Alert.alert('Error', 'Failed to load options or profile. Please check your connection.');
         console.error(err);
       } finally {
         setLoadingMasterData(false);
       }
     };
-    fetchMasterData();
+    fetchData();
   }, []);
 
   const handleChange = (field: string, value: any) => {
@@ -72,14 +115,18 @@ const ProfileSetupScreen = () => {
       await api.put('/profile', formData);
       Alert.alert('Success', 'Profile updated successfully!', [
         {
-          text: 'Continue',
+          text: isEditing ? 'OK' : 'Continue',
           onPress: () => {
-            navigation.dispatch(
-              CommonActions.reset({
-                index: 0,
-                routes: [{ name: 'Main' }],
-              })
-            );
+            if (isEditing) {
+              navigation.goBack();
+            } else {
+              navigation.dispatch(
+                CommonActions.reset({
+                  index: 0,
+                  routes: [{ name: 'Main' }],
+                })
+              );
+            }
           }
         }
       ]);
@@ -155,8 +202,10 @@ const ProfileSetupScreen = () => {
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.header}>
-          <Text style={typography.h2}>Complete Your Profile</Text>
-          <Text style={styles.subtitle}>Please fill out all the details below to continue.</Text>
+          <Text style={typography.h2}>{isEditing ? 'Edit Your Profile' : 'Complete Your Profile'}</Text>
+          <Text style={styles.subtitle}>
+            {isEditing ? 'Update your personal details below.' : 'Please fill out all the details below to continue.'}
+          </Text>
         </View>
 
         <View style={styles.section}>

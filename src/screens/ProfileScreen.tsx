@@ -115,7 +115,10 @@ const ProfileScreen = () => {
           <Text style={styles.name}>{userData?.name || 'User'}</Text>
           <Text style={styles.email}>{userData?.email || 'No Email'}</Text>
           
-          <TouchableOpacity style={styles.editButton}>
+          <TouchableOpacity 
+            style={styles.editButton}
+            onPress={() => navigation.navigate('ProfileSetup' as never, { isEditing: true } as never)}
+          >
             <Text style={styles.editButtonText}>Edit Profile</Text>
           </TouchableOpacity>
         </View>
