@@ -36,6 +36,53 @@ class MatchController extends Controller
         return response()->json($matches);
     }
 
+    public function search(Request $request)
+    {
+        $currentUser = $request->user();
+
+        $query = User::with(['city', 'profession', 'highest_education'])
+            ->where('id', '!=', $currentUser->id)
+            ->where('is_active', true);
+
+        // Apply filters
+        $query->when($request->religion_id, function ($q, $v) { $q->where('religion_id', $v); })
+              ->when($request->caste_id, function ($q, $v) { $q->where('caste_id', $v); })
+              ->when($request->gotra_id, function ($q, $v) { $q->where('gotra_id', $v); })
+              ->when($request->nakshatra_id, function ($q, $v) { $q->where('nakshatra_id', $v); })
+              ->when($request->rashi_id, function ($q, $v) { $q->where('rashi_id', $v); })
+              ->when($request->state_id, function ($q, $v) { $q->where('state_id', $v); })
+              ->when($request->city_id, function ($q, $v) { $q->where('city_id', $v); })
+              ->when($request->marital_status_id, function ($q, $v) { $q->where('marital_status_id', $v); })
+              ->when($request->profession_id, function ($q, $v) { $q->where('profession_id', $v); })
+              ->when($request->highest_education_id, function ($q, $v) { $q->where('highest_education_id', $v); })
+              ->when($request->income_range_id, function ($q, $v) { $q->where('income_range_id', $v); })
+              ->when($request->body_type_id, function ($q, $v) { $q->where('body_type_id', $v); })
+              ->when($request->complexion_id, function ($q, $v) { $q->where('complexion_id', $v); })
+              ->when($request->blood_group_id, function ($q, $v) { $q->where('blood_group_id', $v); })
+              ->when($request->diet_id, function ($q, $v) { $q->where('diet_id', $v); })
+              ->when($request->family_type_id, function ($q, $v) { $q->where('family_type_id', $v); })
+              ->when($request->profile_created_for_id, function ($q, $v) { $q->where('profile_created_for_id', $v); })
+              ->when($request->smoking, function ($q, $v) { $q->where('smoking', $v === 'yes' || $v === '1' || $v === true ? 1 : 0); })
+              ->when($request->drinking, function ($q, $v) { $q->where('drinking', $v === 'yes' || $v === '1' || $v === true ? 1 : 0); })
+              ->when($request->manglik_status, function ($q, $v) { $q->where('manglik_status', $v === 'yes' || $v === '1' || $v === true ? 1 : 0); });
+
+        $matches = $query->limit(50)->get()->map(function ($user) {
+            return [
+                'id' => $user->id,
+                'name' => $user->name,
+                'age' => $user->age ?? 25,
+                'city' => $user->city ? $user->city->name : 'Unknown',
+                'profession' => $user->profession ? $user->profession->name : 'Not Specified',
+                'education' => $user->highest_education ? $user->highest_education->name : 'Not Specified',
+                'matchPercentage' => rand(70, 99),
+                'verified' => (bool)$user->verification,
+                'image' => $user->profile_photo ?: 'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png',
+            ];
+        });
+
+        return response()->json($matches);
+    }
+
     public function getUserProfile($id)
     {
         $user = User::with([

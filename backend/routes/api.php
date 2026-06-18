@@ -24,6 +24,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/profile', [AuthController::class, 'profile']);
     Route::put('/profile', [AuthController::class, 'updateProfile']);
     Route::get('/matches', [\App\Http\Controllers\Api\MatchController::class, 'getRecommendedMatches']);
+    Route::post('/matches/search', [\App\Http\Controllers\Api\MatchController::class, 'search']);
     Route::get('/users/{id}', [\App\Http\Controllers\Api\MatchController::class, 'getUserProfile']);
 });
 
