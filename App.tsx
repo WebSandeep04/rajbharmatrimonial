@@ -9,6 +9,7 @@ import SplashScreen from './src/screens/SplashScreen';
 import LoginScreen from './src/screens/LoginScreen';
 import ProfileSetupScreen from './src/screens/ProfileSetupScreen';
 import UserProfileScreen from './src/screens/UserProfileScreen';
+import ProfileScreen from './src/screens/ProfileScreen';
 import MainNavigator from './src/navigation/MainNavigator';
 
 const Stack = createNativeStackNavigator();
@@ -29,6 +30,7 @@ function App() {
           <Stack.Screen name="ProfileSetup" component={ProfileSetupScreen} />
           <Stack.Screen name="Main" component={MainNavigator} />
           <Stack.Screen name="UserProfile" component={UserProfileScreen} />
+          <Stack.Screen name="Profile" component={ProfileScreen} />
         </Stack.Navigator>
       </NavigationContainer>
     </SafeAreaProvider>

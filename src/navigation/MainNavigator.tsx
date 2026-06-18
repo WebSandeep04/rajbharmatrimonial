@@ -4,9 +4,8 @@ import HomeScreen from '../screens/HomeScreen';
 import MatchesScreen from '../screens/MatchesScreen';
 import SearchScreen from '../screens/SearchScreen';
 import MessagesScreen from '../screens/MessagesScreen';
-import ProfileScreen from '../screens/ProfileScreen';
 import { colors } from '../theme/colors';
-import { Home, Heart, Search, MessageCircle, User } from 'lucide-react-native';
+import { Home, Heart, Search, MessageCircle } from 'lucide-react-native';
 
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -60,13 +59,6 @@ const MainNavigator = () => {
         component={MessagesScreen}
         options={{
           tabBarIcon: ({ color, size }) => <MessageCircle color={color} size={size} />
-        }}
-      />
-      <Tab.Screen
-        name="Profile"
-        component={ProfileScreen}
-        options={{
-          tabBarIcon: ({ color, size }) => <User color={color} size={size} />
         }}
       />
     </Tab.Navigator>

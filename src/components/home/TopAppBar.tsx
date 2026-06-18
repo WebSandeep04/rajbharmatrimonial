@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
 import { Bell, ShieldCheck } from 'lucide-react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useNavigation } from '@react-navigation/native';
 import { colors } from '../../theme/colors';
 import { typography } from '../../theme/typography';
 
@@ -22,11 +23,15 @@ const TopAppBar = () => {
     fetchUser();
   }, []);
 
+  const navigation = useNavigation<any>();
   const fallbackImage = { uri: 'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png' };
 
   return (
     <View style={styles.container}>
-      <View style={styles.profileSection}>
+      <TouchableOpacity 
+        style={styles.profileSection} 
+        onPress={() => navigation.navigate('Profile')}
+      >
         <Image
           source={userData?.profile_photo ? { uri: userData.profile_photo } : fallbackImage}
           style={styles.avatar}
@@ -35,7 +40,7 @@ const TopAppBar = () => {
           <Text style={styles.greeting}>Good Evening,</Text>
           <Text style={styles.name}>{userData?.name?.split(' ')[0] || 'User'}</Text>
         </View>
-      </View>
+      </TouchableOpacity>
 
       <View style={styles.rightSection}>
         <View style={styles.premiumBadge}>
