@@ -11,6 +11,7 @@ import ProfileSetupScreen from './src/screens/ProfileSetupScreen';
 import UserProfileScreen from './src/screens/UserProfileScreen';
 import ProfileScreen from './src/screens/ProfileScreen';
 import MainNavigator from './src/navigation/MainNavigator';
+import ChatScreen from './src/screens/ChatScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -31,6 +32,7 @@ function App() {
           <Stack.Screen name="Main" component={MainNavigator} />
           <Stack.Screen name="UserProfile" component={UserProfileScreen} />
           <Stack.Screen name="Profile" component={ProfileScreen} />
+          <Stack.Screen name="Chat" component={ChatScreen} />
         </Stack.Navigator>
       </NavigationContainer>
     </SafeAreaProvider>

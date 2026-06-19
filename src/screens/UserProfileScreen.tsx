@@ -181,8 +181,8 @@ const UserProfileScreen = () => {
         </View>
       </ScrollView>
 
-      {connectionStatus !== 'connected' && (
-        <View style={styles.footer}>
+      <View style={styles.footer}>
+        {connectionStatus !== 'connected' ? (
           <TouchableOpacity 
             style={[styles.connectButton, connectionStatus === 'request_sent' && styles.connectButtonDisabled]} 
             onPress={handleConnect}
@@ -196,8 +196,21 @@ const UserProfileScreen = () => {
                'Connected'}
             </Text>
           </TouchableOpacity>
-        </View>
-      )}
+        ) : (
+          <TouchableOpacity 
+            style={[styles.connectButton, { backgroundColor: colors.secondary || '#D4A373' }]} 
+            onPress={() => navigation.navigate('Chat', { 
+              targetUser: { 
+                id: userId, 
+                name: profile.name, 
+                avatar: profile.image || profile.profile_photo 
+              } 
+            })}
+          >
+            <Text style={styles.connectButtonText}>Send Message</Text>
+          </TouchableOpacity>
+        )}
+      </View>
 
       <Modal visible={!!selectedImage} transparent={true} animationType="fade" onRequestClose={() => setSelectedImage(null)}>
         <View style={styles.modalBackground}>

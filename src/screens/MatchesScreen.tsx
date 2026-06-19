@@ -62,6 +62,14 @@ const MatchesScreen = () => {
           </View>
         )}
       </View>
+      <TouchableOpacity 
+        style={styles.chatIconBtn}
+        onPress={() => navigation.navigate('Chat', { 
+          targetUser: { id: item.id, name: item.name, avatar: item.profile_photo } 
+        })}
+      >
+        <Text style={styles.chatIconText}>Chat</Text>
+      </TouchableOpacity>
     </TouchableOpacity>
   );
 
@@ -289,6 +297,17 @@ const styles = StyleSheet.create({
   exploreBtnText: {
     color: '#fff',
     fontWeight: '600',
+  },
+  chatIconBtn: {
+    backgroundColor: colors.secondary || '#D4A373',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+  },
+  chatIconText: {
+    color: '#fff',
+    fontWeight: '600',
+    fontSize: 14,
   }
 });
 
