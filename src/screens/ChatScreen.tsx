@@ -1,27 +1,28 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { View, StyleSheet, ActivityIndicator, Text, TouchableOpacity, Image, KeyboardAvoidingView, Platform } from 'react-native';
-import { GiftedChat, IMessage, Bubble, InputToolbar, Send } from 'react-native-gifted-chat';
+import React, { useEffect, useCallback } from 'react';
+import { View, ActivityIndicator, Text, TouchableOpacity, Image, KeyboardAvoidingView, Platform } from 'react-native';
+import { GiftedChat, IMessage, Bubble, InputToolbar } from 'react-native-gifted-chat';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors } from '../theme/colors';
-import { createOrGetChatRoom, sendMessage, subscribeToMessages, ChatUser } from '../services/firebaseChat';
+import { subscribeToMessages, ChatUser } from '../services/firebaseChat';
 import { useRoute, useNavigation } from '@react-navigation/native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ChevronLeft, Send as SendIcon } from 'lucide-react-native';
+import { styles } from '../styles/ChatScreenStyles';
+import { useAppSelector, useAppDispatch } from '../store/hooks';
+import { initializeChatRoom, sendChatMessage, setMessagesForRoom, setChatLoading, setChatError } from '../store/slices/chatSlice';
 
 const ChatScreen = () => {
   const route = useRoute<any>();
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
+  const dispatch = useAppDispatch();
 
   useEffect(() => {
     navigation.setOptions({ headerShown: false });
   }, [navigation]);
 
-  const [currentUser, setCurrentUser] = useState<ChatUser | null>(null);
-  const [messages, setMessages] = useState<IMessage[]>([]);
-  const [roomId, setRoomId] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  // Read state from Redux
+  const { activeRoomId, messages, loading, error, initializingRoom } = useAppSelector(state => state.chat);
+  const roomMessages = activeRoomId ? messages[activeRoomId] || [] : [];
 
   // The user we want to chat with, passed via navigation params
   const { targetUser } = route.params || {};
@@ -35,75 +36,51 @@ const ChatScreen = () => {
     name: 'Unknown',
   };
 
-  useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const userInfoStr = await AsyncStorage.getItem('userInfo');
-        if (userInfoStr) {
-          const userInfo = JSON.parse(userInfoStr);
-          setCurrentUser({
-            _id: userInfo.id?.toString(),
-            name: userInfo.name || 'User',
-            avatar: userInfo.avatar || '',
-          });
-        } else {
-          setErrorMsg("Could not load your user profile.");
-          setLoading(false);
-        }
-      } catch (e) {
-        console.error('Failed to fetch user', e);
-        setErrorMsg("Error loading user profile.");
-        setLoading(false);
-      }
-    };
-    fetchUser();
-  }, []);
+  // Get current user from Redux
+  const { userInfo } = useAppSelector((state) => state.auth);
+  
+  const currentUser: ChatUser | null = userInfo ? {
+    _id: userInfo.id?.toString(),
+    name: userInfo.name || 'User',
+    avatar: userInfo.avatar || '',
+  } : null;
 
   useEffect(() => {
     if (!targetUser) {
-      setErrorMsg("No match selected to chat with.");
-      setLoading(false);
+      dispatch(setChatError("No match selected to chat with."));
       return;
     }
     
     if (!currentUser) {
-      return; // wait for currentUser to be fetched
+      dispatch(setChatError("Could not load your user profile."));
+      return;
     }
 
-    const initializeChat = async () => {
-      try {
-        const id = await createOrGetChatRoom(currentUser, otherUser);
-        setRoomId(id);
-      } catch (error: any) {
-        console.error("Error creating chat room:", error);
-        setErrorMsg("Failed to initialize chat: " + (error?.message || String(error)));
-        setLoading(false);
-      }
-    };
-
-    initializeChat();
-  }, [targetUser, currentUser]);
+    // Initialize the room via Redux thunk
+    dispatch(initializeChatRoom({ currentUser, otherUser }));
+  }, [dispatch, targetUser?.id, currentUser?._id]);
 
   useEffect(() => {
-    if (!roomId) return;
+    if (!activeRoomId) return;
 
-    // Subscribe to messages in real-time
-    const unsubscribe = subscribeToMessages(roomId, (newMessages, error) => {
-      if (error) {
-        setErrorMsg("Failed to load messages: " + (error?.message || String(error)));
+    dispatch(setChatLoading(true));
+
+    // Subscribe to messages in real-time, dispatch to Redux store
+    const unsubscribe = subscribeToMessages(activeRoomId, (newMessages, err) => {
+      if (err) {
+        dispatch(setChatError("Failed to load messages: " + (err?.message || String(err))));
       } else {
-        setMessages(newMessages);
+        dispatch(setMessagesForRoom({ roomId: activeRoomId, messages: newMessages }));
       }
-      setLoading(false);
     });
 
     return () => unsubscribe();
-  }, [roomId]);
+  }, [dispatch, activeRoomId]);
 
   const onSend = useCallback((newMessages: IMessage[] = []) => {
-    if (!roomId) return;
-    sendMessage(roomId, newMessages);
-  }, [roomId]);
+    if (!activeRoomId) return;
+    dispatch(sendChatMessage({ roomId: activeRoomId, messages: newMessages }));
+  }, [dispatch, activeRoomId]);
 
   return (
     <SafeAreaView 
@@ -124,13 +101,13 @@ const ChatScreen = () => {
         </View>
       </View>
 
-      {errorMsg ? (
+      {error ? (
         <View style={styles.loadingContainer}>
           <Text style={{ color: 'red', textAlign: 'center', padding: 20 }}>
-            {errorMsg}
+            {error}
           </Text>
         </View>
-      ) : loading || !currentUser ? (
+      ) : loading || initializingRoom || !currentUser ? (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={colors.primary} />
         </View>
@@ -141,10 +118,10 @@ const ChatScreen = () => {
           keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
         >
           <GiftedChat
-            messages={messages}
+            messages={roomMessages}
             onSend={messages => onSend(messages)}
             user={{
-              _id: currentUser._id,
+              _id: currentUser._id!,
               name: currentUser.name,
               avatar: currentUser.avatar,
             }}
@@ -199,66 +176,5 @@ const ChatScreen = () => {
     </SafeAreaView>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    backgroundColor: '#FFFFFF',
-    borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  backButton: {
-    padding: 4,
-    marginRight: 8,
-  },
-  headerAvatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    marginRight: 12,
-  },
-  headerInfo: {
-    flex: 1,
-  },
-  headerName: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: colors.textDark || '#333',
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  inputToolbar: {
-    borderTopWidth: 1,
-    borderTopColor: '#E8E8E8',
-    backgroundColor: '#FFFFFF',
-    paddingVertical: 4,
-    paddingHorizontal: 8,
-  },
-  sendButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: colors.primary,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 8,
-    marginBottom: 4,
-  }
-});
 
 export default ChatScreen;

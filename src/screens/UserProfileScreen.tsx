@@ -1,60 +1,36 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, Image, ScrollView, TouchableOpacity, ActivityIndicator, Modal } from 'react-native';
-import { useRoute, useNavigation } from '@react-navigation/native';
+import { View, Text, Image, ScrollView, TouchableOpacity, ActivityIndicator, Modal } from 'react-native';
+import { useRoute, useNavigation, useFocusEffect } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ChevronLeft, MapPin, Briefcase, GraduationCap, CheckCircle2, X } from 'lucide-react-native';
-import api from '../services/api';
 import { colors } from '../theme/colors';
-import { typography } from '../theme/typography';
+import { styles } from '../styles/UserProfileScreenStyles';
+import { useAppDispatch, useAppSelector } from '../store/hooks';
+import { fetchUserProfile, handleConnectAction, resetUserProfile } from '../store/slices/userProfileSlice';
 
 const UserProfileScreen = () => {
   const route = useRoute<any>();
   const navigation = useNavigation();
   const userId = route.params?.userId;
+  const dispatch = useAppDispatch();
 
-  const [profile, setProfile] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
-  const [connectionStatus, setConnectionStatus] = useState('none');
-  const [connectionId, setConnectionId] = useState<number | null>(null);
-  const [connecting, setConnecting] = useState(false);
+  const { profile, loading, connectionStatus, connectionId, connecting } = useAppSelector((state) => state.userProfile);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
-  useEffect(() => {
-    const fetchProfile = async () => {
-      try {
-        const [profileRes, statusRes] = await Promise.all([
-          api.get(`/users/${userId}`),
-          api.get(`/connections/status/${userId}`)
-        ]);
-        setProfile(profileRes.data);
-        setConnectionStatus(statusRes.data.status);
-        if (statusRes.data.connection_id) setConnectionId(statusRes.data.connection_id);
-      } catch (err) {
-        console.error('Failed to fetch user profile', err);
-      } finally {
-        setLoading(false);
+  useFocusEffect(
+    React.useCallback(() => {
+      if (userId) {
+        dispatch(fetchUserProfile(userId));
       }
-    };
-    if (userId) fetchProfile();
-  }, [userId]);
+      return () => {
+        dispatch(resetUserProfile());
+      };
+    }, [userId, dispatch])
+  );
 
-  const handleConnect = async () => {
+  const handleConnect = () => {
     if (connecting) return;
-    setConnecting(true);
-    try {
-      if (connectionStatus === 'none') {
-        const res = await api.post('/connections/send', { receiver_id: userId });
-        setConnectionStatus('request_sent');
-        setConnectionId(res.data.connection.id);
-      } else if (connectionStatus === 'request_received') {
-        await api.post(`/connections/${connectionId}/respond`, { action: 'accept' });
-        setConnectionStatus('connected');
-      }
-    } catch (err) {
-      console.error('Connection action failed', err);
-    } finally {
-      setConnecting(false);
-    }
+    dispatch(handleConnectAction({ userId, connectionStatus, connectionId }));
   };
 
   if (loading) {
@@ -224,173 +200,5 @@ const UserProfileScreen = () => {
     </SafeAreaView>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  centerContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: colors.background,
-  },
-  imageContainer: {
-    position: 'relative',
-    height: 400,
-  },
-  image: {
-    width: '100%',
-    height: '100%',
-    resizeMode: 'cover',
-  },
-  backButton: {
-    position: 'absolute',
-    top: 20,
-    left: 20,
-    backgroundColor: 'rgba(255, 255, 255, 0.8)',
-    borderRadius: 20,
-    padding: 8,
-  },
-  contentContainer: {
-    padding: 20,
-    backgroundColor: colors.background,
-    borderTopLeftRadius: 30,
-    borderTopRightRadius: 30,
-    marginTop: -30,
-  },
-  headerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  name: {
-    ...typography.h2,
-    fontSize: 28,
-  },
-  verifiedIcon: {
-    marginLeft: 8,
-  },
-  locationRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  locationText: {
-    fontSize: 16,
-    color: colors.textLight,
-    marginLeft: 8,
-  },
-  quickInfoSection: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    paddingVertical: 16,
-    borderTopWidth: 1,
-    borderBottomWidth: 1,
-    borderColor: colors.border,
-    marginBottom: 24,
-  },
-  quickInfoItem: {
-    alignItems: 'center',
-  },
-  quickInfoText: {
-    marginTop: 8,
-    fontSize: 14,
-    color: colors.textDark,
-    fontWeight: '500',
-  },
-  section: {
-    marginBottom: 24,
-  },
-  sectionTitle: {
-    ...typography.h3,
-    marginBottom: 12,
-  },
-  bioText: {
-    ...typography.body,
-    lineHeight: 24,
-  },
-  galleryContainer: {
-    paddingVertical: 8,
-  },
-  galleryImageWrapper: {
-    width: 140,
-    height: 180,
-    marginRight: 12,
-    borderRadius: 12,
-    overflow: 'hidden',
-    backgroundColor: colors.surface,
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-  },
-  galleryImage: {
-    width: '100%',
-    height: '100%',
-    resizeMode: 'cover',
-  },
-  detailsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    backgroundColor: colors.surface,
-    padding: 16,
-    borderRadius: 12,
-  },
-  detailItem: {
-    width: '50%',
-    marginBottom: 16,
-  },
-  detailLabel: {
-    fontSize: 13,
-    color: colors.textLight,
-    marginBottom: 4,
-  },
-  detailValue: {
-    fontSize: 15,
-    color: colors.textDark,
-    fontWeight: '500',
-  },
-  footer: {
-    padding: 20,
-    backgroundColor: colors.surface,
-    borderTopWidth: 1,
-    borderTopColor: colors.border,
-  },
-  connectButton: {
-    backgroundColor: colors.primary,
-    padding: 16,
-    borderRadius: 12,
-    alignItems: 'center',
-  },
-  connectButtonDisabled: {
-    backgroundColor: colors.textLight,
-  },
-  connectButtonText: {
-    color: '#fff',
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
-  modalBackground: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.95)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  closeModalButton: {
-    position: 'absolute',
-    top: 40,
-    right: 20,
-    zIndex: 10,
-    padding: 8,
-  },
-  fullScreenImage: {
-    width: '100%',
-    height: '80%',
-    resizeMode: 'contain',
-  },
-});
 
 export default UserProfileScreen;

@@ -1,74 +1,58 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  View, Text, StyleSheet, FlatList, Image, TouchableOpacity, 
+  View, Text, FlatList, Image, TouchableOpacity, 
   ActivityIndicator, Modal, ScrollView 
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { CheckCircle2, MapPin, Briefcase, GraduationCap, Filter, X } from 'lucide-react-native';
 import { Picker } from '@react-native-picker/picker';
 import { useNavigation } from '@react-navigation/native';
-import api from '../services/api';
 import { colors } from '../theme/colors';
 import { typography } from '../theme/typography';
-
+import { styles } from '../styles/SearchScreenStyles';
 import TopAppBar from '../components/home/TopAppBar';
+import { useAppDispatch, useAppSelector } from '../store/hooks';
+import { 
+  fetchSearchMasterData, 
+  performSearch, 
+  setFilters, 
+  clearFilters as clearSearchFilters 
+} from '../store/slices/searchSlice';
 
 const SearchScreen = () => {
   const navigation = useNavigation<any>();
-  const [profiles, setProfiles] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [searching, setSearching] = useState(false);
+  const dispatch = useAppDispatch();
   
-  // Modal & Master Data State
+  const { 
+    profiles, 
+    searching, 
+    loadingMasterData, 
+    masterDataOptions, 
+    filters 
+  } = useAppSelector((state) => state.search);
+
+  // Keep modal visibility as local state
   const [filterModalVisible, setFilterModalVisible] = useState(false);
-  const [masterDataOptions, setMasterDataOptions] = useState<Record<string, any[]>>({});
-  
-  // Filter States
-  const [filters, setFilters] = useState<any>({
-    religion_id: '', caste_id: '', gotra_id: '', nakshatra_id: '', rashi_id: '',
-    state_id: '', city_id: '', marital_status_id: '', profile_created_for_id: '',
-    highest_education_id: '', profession_id: '', income_range_id: '',
-    body_type_id: '', complexion_id: '', blood_group_id: '',
-    diet_id: '', family_type_id: '', smoking: '', drinking: '', manglik_status: ''
-  });
 
   useEffect(() => {
-    fetchMasterData();
-    fetchMatches();
-  }, []);
-
-  const fetchMasterData = async () => {
-    try {
-      const response = await api.get('/master-data');
-      setMasterDataOptions(response.data);
-    } catch (err) {
-      console.error('Failed to load filter options', err);
-    }
-  };
-
-  const fetchMatches = async (currentFilters = filters) => {
-    try {
-      setSearching(true);
-      const response = await api.post('/matches/search', currentFilters);
-      setProfiles(response.data);
-    } catch (err) {
-      console.error('Failed to search matches', err);
-    } finally {
-      setLoading(false);
-      setSearching(false);
-    }
-  };
+    dispatch(fetchSearchMasterData());
+    dispatch(performSearch(filters));
+  }, [dispatch]);
 
   const handleFilterChange = (field: string, value: string) => {
-    setFilters((prev: any) => ({ ...prev, [field]: value }));
+    dispatch(setFilters({ [field]: value }));
   };
 
   const applyFilters = () => {
     setFilterModalVisible(false);
-    fetchMatches(filters);
+    dispatch(performSearch(filters));
   };
 
   const clearFilters = () => {
+    dispatch(clearSearchFilters());
+    setFilterModalVisible(false);
+    
+    // We need to wait for the state to update, or pass the empty object directly
     const emptyFilters = {
       religion_id: '', caste_id: '', gotra_id: '', nakshatra_id: '', rashi_id: '',
       state_id: '', city_id: '', marital_status_id: '', profile_created_for_id: '',
@@ -76,9 +60,7 @@ const SearchScreen = () => {
       body_type_id: '', complexion_id: '', blood_group_id: '',
       diet_id: '', family_type_id: '', smoking: '', drinking: '', manglik_status: ''
     };
-    setFilters(emptyFilters);
-    setFilterModalVisible(false);
-    fetchMatches(emptyFilters);
+    dispatch(performSearch(emptyFilters));
   };
 
   const renderFilterPicker = (field: keyof typeof filters, label: string, masterKey: string) => {
@@ -150,7 +132,7 @@ const SearchScreen = () => {
         </TouchableOpacity>
       </View>
 
-      {loading || searching ? (
+      {searching || loadingMasterData ? (
         <View style={styles.centerContainer}>
           <ActivityIndicator size="large" color={colors.primary} />
           <Text style={{ marginTop: 12, color: colors.textLight, fontSize: 16 }}>Finding your perfect match...</Text>
@@ -263,214 +245,5 @@ const SearchScreen = () => {
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  centerContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-    backgroundColor: 'transparent',
-    marginBottom: 8,
-  },
-  filterButtonIcon: {
-    padding: 10,
-    backgroundColor: colors.primary,
-    borderRadius: 16,
-    shadowColor: colors.primary,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 6,
-    elevation: 4,
-  },
-  row: {
-    justifyContent: 'space-between',
-  },
-  listContent: {
-    paddingHorizontal: 16,
-    paddingBottom: 24,
-  },
-  card: {
-    width: '48%',
-    backgroundColor: colors.surface,
-    borderRadius: 20,
-    marginBottom: 20,
-    elevation: 6,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    overflow: 'hidden',
-  },
-  imageContainer: {
-    position: 'relative',
-    height: 160,
-  },
-  image: {
-    width: '100%',
-    height: '100%',
-    resizeMode: 'cover',
-  },
-  matchBadge: {
-    position: 'absolute',
-    top: 8,
-    left: 8,
-    backgroundColor: 'rgba(255,255,255,0.9)',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
-  },
-  matchText: {
-    color: colors.primary,
-    fontWeight: 'bold',
-    fontSize: 10,
-  },
-  infoContainer: {
-    padding: 12,
-  },
-  nameRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 2,
-  },
-  name: {
-    ...typography.h3,
-    fontSize: 15,
-    flex: 1,
-  },
-  verifiedIcon: {
-    marginLeft: 4,
-  },
-  ageText: {
-    fontSize: 12,
-    color: colors.textLight,
-    marginBottom: 8,
-  },
-  detailRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  detailText: {
-    fontSize: 12,
-    color: colors.textLight,
-    marginLeft: 6,
-    flex: 1,
-  },
-  viewButton: {
-    backgroundColor: colors.primaryLight,
-    paddingVertical: 8,
-    borderRadius: 16,
-    alignItems: 'center',
-  },
-  viewButtonText: {
-    color: '#FFF',
-    fontSize: 12,
-    fontWeight: 'bold',
-  },
-  
-  // Modal Styles
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.6)',
-    justifyContent: 'flex-end',
-  },
-  modalContent: {
-    backgroundColor: colors.surface,
-    borderTopLeftRadius: 32,
-    borderTopRightRadius: 32,
-    paddingHorizontal: 24,
-    paddingBottom: 40,
-    paddingTop: 16,
-    maxHeight: '85%',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: -4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 12,
-    elevation: 10,
-  },
-  grabHandle: {
-    width: 40,
-    height: 5,
-    backgroundColor: '#E0E0E0',
-    borderRadius: 3,
-    alignSelf: 'center',
-    marginBottom: 20,
-  },
-  modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  sectionHeader: {
-    ...typography.h3,
-    color: colors.primary,
-    marginTop: 20,
-    marginBottom: 16,
-    paddingBottom: 8,
-  },
-  inputGroup: {
-    marginBottom: 20,
-  },
-  label: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: colors.textDark,
-    marginBottom: 10,
-  },
-  pickerContainer: {
-    backgroundColor: colors.background,
-    borderRadius: 16,
-    overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  modalFooter: {
-    flexDirection: 'row',
-    marginTop: 24,
-    justifyContent: 'space-between',
-    gap: 16,
-  },
-  clearFilterButtonBtn: {
-    flex: 1,
-    paddingVertical: 16,
-    alignItems: 'center',
-    borderRadius: 16,
-    backgroundColor: colors.background,
-  },
-  clearFilterText: {
-    color: colors.textDark,
-    fontWeight: 'bold',
-    fontSize: 16,
-  },
-  applyFilterButton: {
-    flex: 2,
-    backgroundColor: colors.primary,
-    paddingVertical: 16,
-    alignItems: 'center',
-    borderRadius: 16,
-    shadowColor: colors.primary,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 6,
-    elevation: 4,
-  },
-  applyFilterText: {
-    color: '#FFF',
-    fontWeight: 'bold',
-    fontSize: 16,
-  },
-});
 
 export default SearchScreen;

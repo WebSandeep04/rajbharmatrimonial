@@ -1,30 +1,26 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import {
   View,
   Text,
-  StyleSheet,
   TouchableOpacity,
   ActivityIndicator,
   Alert,
   StatusBar,
-  Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { GoogleSignin, statusCodes } from '@react-native-google-signin/google-signin';
-import auth from '@react-native-firebase/auth';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import { useNavigation, CommonActions } from '@react-navigation/native';
 import LinearGradient from 'react-native-linear-gradient';
-import api from '../services/api';
 import { colors } from '../theme/colors';
 import { typography } from '../theme/typography';
-import { useAppDispatch } from '../store/hooks';
-import { setCredentials } from '../store/slices/authSlice';
+import { useAppDispatch, useAppSelector } from '../store/hooks';
+import { loginWithGoogle } from '../store/slices/authSlice';
+import { styles } from '../styles/LoginScreenStyles';
 
 const LoginScreen = () => {
-  const [loading, setLoading] = useState(false);
   const navigation = useNavigation();
   const dispatch = useAppDispatch();
+  const { loading } = useAppSelector(state => state.auth);
 
   useEffect(() => {
     GoogleSignin.configure({
@@ -34,40 +30,9 @@ const LoginScreen = () => {
 
   const onGoogleButtonPress = async () => {
     try {
-      setLoading(true);
-      await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
-      const signInResult = await GoogleSignin.signIn();
-      const idToken = signInResult?.data?.idToken;
-
-      if (!idToken) {
-        throw new Error('No ID token found');
-      }
-
-      const googleCredential = auth.GoogleAuthProvider.credential(idToken);
-      await auth().signInWithCredential(googleCredential);
-      
-      const firebaseToken = await auth().currentUser?.getIdToken();
-      
-      if (!firebaseToken) {
-        throw new Error('Failed to retrieve Firebase ID token');
-      }
-
-      const response = await api.post('/auth/google-login', {
-        id_token: firebaseToken,
-      });
-
-      if (response.data && response.data.token) {
-        // Still save to AsyncStorage for persistence across app restarts
-        await AsyncStorage.setItem('userToken', response.data.token);
-        await AsyncStorage.setItem('userInfo', JSON.stringify(response.data.user));
-
-        // Dispatch to Redux store
-        dispatch(setCredentials({
-          token: response.data.token,
-          userInfo: response.data.user
-        }));
-
-        const user = response.data.user;
+      const resultAction = await dispatch(loginWithGoogle());
+      if (loginWithGoogle.fulfilled.match(resultAction)) {
+        const user = resultAction.payload.userInfo;
         const isProfileComplete = !!user.religion_id;
 
         navigation.dispatch(
@@ -77,24 +42,12 @@ const LoginScreen = () => {
           })
         );
       } else {
-        throw new Error('Invalid response from server');
+        if (resultAction.payload) {
+          Alert.alert('Login Failed', resultAction.payload as string);
+        }
       }
     } catch (error: any) {
-      if (error.code === statusCodes.SIGN_IN_CANCELLED) {
-        // user cancelled
-      } else if (error.code === statusCodes.IN_PROGRESS) {
-        // in progress
-      } else {
-        Alert.alert('Login Failed', error.message || 'An error occurred during login');
-        console.error('Login error:', error);
-      }
-      try {
-        await GoogleSignin.signOut();
-      } catch (e) {
-        // Ignore
-      }
-    } finally {
-      setLoading(false);
+      console.error('Unexpected login error:', error);
     }
   };
 
@@ -156,108 +109,5 @@ const LoginScreen = () => {
     </LinearGradient>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  safeArea: {
-    flex: 1,
-  },
-  contentContainer: {
-    flex: 1,
-    padding: 32,
-    justifyContent: 'space-between',
-    paddingTop: 80,
-  },
-  header: {
-    alignItems: 'center',
-    marginTop: 20,
-  },
-  logoCircle: {
-    width: 90,
-    height: 90,
-    borderRadius: 45,
-    backgroundColor: colors.primary,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 32,
-    elevation: 8,
-    shadowColor: colors.primary,
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.4,
-    shadowRadius: 8,
-    borderWidth: 2,
-    borderColor: colors.secondary,
-  },
-  logoText: {
-    color: colors.secondary,
-    fontSize: 36,
-    fontWeight: 'bold',
-    fontFamily: 'serif',
-  },
-  subtitle: {
-    ...typography.subtitle,
-    textAlign: 'center',
-    marginTop: 12,
-    paddingHorizontal: 20,
-  },
-  actionContainer: {
-    width: '100%',
-    paddingBottom: 20,
-  },
-  googleButton: {
-    backgroundColor: colors.surface,
-    borderRadius: 16,
-    paddingVertical: 14,
-    paddingHorizontal: 20,
-    elevation: 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 12,
-    marginBottom: 40,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  buttonDisabled: {
-    opacity: 0.7,
-  },
-  buttonContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  gIconContainer: {
-    marginRight: 12,
-  },
-  gText: {
-    color: '#DB4437',
-    fontSize: 22,
-    fontWeight: 'bold',
-  },
-  buttonText: {
-    color: colors.textDark,
-    fontSize: 16,
-    fontWeight: '600',
-    letterSpacing: 0.5,
-  },
-  footer: {
-    alignItems: 'center',
-  },
-  linksRow: {
-    flexDirection: 'row',
-    marginTop: 4,
-  },
-  footerText: {
-    color: colors.textLight,
-    fontSize: 13,
-  },
-  linkText: {
-    color: colors.primary,
-    fontSize: 13,
-    fontWeight: '600',
-  },
-});
 
 export default LoginScreen;

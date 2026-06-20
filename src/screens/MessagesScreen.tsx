@@ -1,45 +1,35 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import React, { useEffect } from 'react';
+import { View, Text, FlatList, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { colors } from '../theme/colors';
 import { typography } from '../theme/typography';
 import TopAppBar from '../components/home/TopAppBar';
 import { subscribeToInbox, ChatRoom } from '../services/firebaseChat';
 import { useNavigation } from '@react-navigation/native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { styles } from '../styles/MessagesScreenStyles';
+import { useAppSelector, useAppDispatch } from '../store/hooks';
+import { setRooms, setChatLoading } from '../store/slices/chatSlice';
 
 const MessagesScreen = () => {
   const navigation = useNavigation<any>();
-  const [rooms, setRooms] = useState<ChatRoom[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
-
-  useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const userInfoStr = await AsyncStorage.getItem('userInfo');
-        if (userInfoStr) {
-          const userInfo = JSON.parse(userInfoStr);
-          setCurrentUserId(userInfo.id?.toString() || null);
-        }
-      } catch (e) {
-        console.error('Failed to fetch user', e);
-      }
-    };
-    fetchUser();
-  }, []);
+  const dispatch = useAppDispatch();
+  
+  // Use Redux for user info and chat state
+  const { userInfo } = useAppSelector((state) => state.auth);
+  const { rooms, loading } = useAppSelector((state) => state.chat);
+  
+  const currentUserId = userInfo?.id?.toString() || null;
 
   useEffect(() => {
     if (!currentUserId) return;
 
+    dispatch(setChatLoading(true));
+
     const unsubscribe = subscribeToInbox(currentUserId, (newRooms) => {
-      setRooms(newRooms);
-      setLoading(false);
+      dispatch(setRooms(newRooms));
     });
 
     return () => unsubscribe();
-  }, [currentUserId]);
+  }, [currentUserId, dispatch]);
 
   const renderItem = ({ item }: { item: ChatRoom }) => {
     // Find the other participant's details
@@ -94,78 +84,5 @@ const MessagesScreen = () => {
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  headerTitle: {
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-  },
-  listContainer: {
-    paddingHorizontal: 20,
-  },
-  chatItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 15,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-  },
-  avatarPlaceholder: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    backgroundColor: colors.primary,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 15,
-  },
-  avatarText: {
-    color: 'white',
-    fontSize: 20,
-    fontWeight: 'bold',
-  },
-  chatInfo: {
-    flex: 1,
-  },
-  chatName: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: colors.text,
-    marginBottom: 4,
-  },
-  lastMessage: {
-    fontSize: 14,
-    color: colors.textLight,
-  },
-  timeText: {
-    fontSize: 12,
-    color: colors.textLight,
-  },
-  emptyContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 40,
-  },
-  emptyText: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: colors.text,
-    marginBottom: 10,
-  },
-  emptySubtext: {
-    fontSize: 14,
-    color: colors.textLight,
-    textAlign: 'center',
-  }
-});
 
 export default MessagesScreen;

@@ -72,6 +72,50 @@ export const logoutUser = createAsyncThunk(
   }
 );
 
+// Thunk to handle Google Login
+export const loginWithGoogle = createAsyncThunk(
+  'auth/loginWithGoogle',
+  async (_, { rejectWithValue }) => {
+    try {
+      await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
+      const signInResult = await GoogleSignin.signIn();
+      const idToken = signInResult?.data?.idToken;
+
+      if (!idToken) {
+        throw new Error('No ID token found');
+      }
+
+      const googleCredential = auth.GoogleAuthProvider.credential(idToken);
+      await auth().signInWithCredential(googleCredential);
+      
+      const firebaseToken = await auth().currentUser?.getIdToken();
+      
+      if (!firebaseToken) {
+        throw new Error('Failed to retrieve Firebase ID token');
+      }
+
+      // We need to import api here or assume it's imported at the top. Wait, we didn't import api in authSlice.ts!
+      // Let me just add the import at the top later, but for now I'll use require to be safe, or just import it.
+      const api = require('../../services/api').default;
+      const response = await api.post('/auth/google-login', {
+        id_token: firebaseToken,
+      });
+
+      if (response.data && response.data.token) {
+        await AsyncStorage.setItem('userToken', response.data.token);
+        await AsyncStorage.setItem('userInfo', JSON.stringify(response.data.user));
+        return { token: response.data.token, userInfo: response.data.user };
+      } else {
+        throw new Error('Invalid response from server');
+      }
+    } catch (error: any) {
+      // Clean up on failure
+      try { await GoogleSignin.signOut(); } catch (e) {}
+      return rejectWithValue(error.message || 'An error occurred during login');
+    }
+  }
+);
+
 const authSlice = createSlice({
   name: 'auth',
   initialState,
@@ -119,6 +163,22 @@ const authSlice = createSlice({
         state.token = null;
         state.userInfo = null;
         state.isAuthenticated = false;
+      })
+      // loginWithGoogle
+      .addCase(loginWithGoogle.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(loginWithGoogle.fulfilled, (state, action) => {
+        state.token = action.payload.token;
+        state.userInfo = action.payload.userInfo;
+        state.isAuthenticated = true;
+        state.loading = false;
+        state.error = null;
+      })
+      .addCase(loginWithGoogle.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
       });
   },
 });
