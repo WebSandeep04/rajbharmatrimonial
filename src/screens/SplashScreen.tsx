@@ -1,16 +1,18 @@
 import React, { useEffect } from 'react';
 import { View, ActivityIndicator, StyleSheet, Image, Text } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation, CommonActions } from '@react-navigation/native';
+import { useAppDispatch } from '../store/hooks';
+import { loadUserFromStorage } from '../store/slices/authSlice';
 
 const SplashScreen = () => {
   const navigation = useNavigation();
+  const dispatch = useAppDispatch();
 
   useEffect(() => {
     const checkToken = async () => {
       try {
-        const token = await AsyncStorage.getItem('userToken');
-        if (token) {
+        const resultAction = await dispatch(loadUserFromStorage());
+        if (loadUserFromStorage.fulfilled.match(resultAction)) {
           // Navigate to Main
           navigation.dispatch(
             CommonActions.reset({
@@ -39,7 +41,7 @@ const SplashScreen = () => {
 
     // Simulate a brief loading time for the splash screen
     setTimeout(checkToken, 2000);
-  }, [navigation]);
+  }, [navigation, dispatch]);
 
   return (
     <View style={styles.container}>

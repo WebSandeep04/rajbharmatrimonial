@@ -11,36 +11,26 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, CommonActions } from '@react-navigation/native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { GoogleSignin } from '@react-native-google-signin/google-signin';
-import auth from '@react-native-firebase/auth';
 import { Settings, Shield, Bell, HelpCircle, LogOut, ChevronRight, Plus, Star, Trash2, Edit2 } from 'lucide-react-native';
 import { launchImageLibrary } from 'react-native-image-picker';
 import api from '../services/api';
 import { colors } from '../theme/colors';
 import { typography } from '../theme/typography';
+import { useAppDispatch, useAppSelector } from '../store/hooks';
+import { logoutUser, updateUserInfo } from '../store/slices/authSlice';
 
 const ProfileScreen = () => {
   const navigation = useNavigation();
+  const dispatch = useAppDispatch();
+  const { userInfo } = useAppSelector((state) => state.auth);
+  
   const [isLoggingOut, setIsLoggingOut] = useState(false);
-  const [userData, setUserData] = useState<{name?: string, email?: string, profile_photo?: string} | null>(null);
   
   // Image Gallery State
   const [images, setImages] = useState<any[]>([]);
   const [uploadingImage, setUploadingImage] = useState(false);
 
   useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const userInfo = await AsyncStorage.getItem('userInfo');
-        if (userInfo) {
-          setUserData(JSON.parse(userInfo));
-        }
-      } catch (error) {
-        console.error('Failed to load user info', error);
-      }
-    };
-    fetchUser();
     fetchImages();
   }, []);
 
@@ -129,20 +119,8 @@ const ProfileScreen = () => {
     ]);
   };
 
-
-
   const updateLocalProfilePhoto = async (photoUrl: string) => {
-    try {
-      const userInfoStr = await AsyncStorage.getItem('userInfo');
-      if (userInfoStr) {
-        const userInfo = JSON.parse(userInfoStr);
-        userInfo.profile_photo = photoUrl;
-        await AsyncStorage.setItem('userInfo', JSON.stringify(userInfo));
-        setUserData(userInfo);
-      }
-    } catch (error) {
-      console.error('Failed to update local user data', error);
-    }
+    dispatch(updateUserInfo({ profile_photo: photoUrl }));
   };
 
   const handleLogout = async () => {
@@ -158,21 +136,7 @@ const ProfileScreen = () => {
             try {
               setIsLoggingOut(true);
               
-              // Clear AsyncStorage
-              await AsyncStorage.removeItem('userToken');
-              await AsyncStorage.removeItem('userInfo');
-              
-              // Sign out from Firebase
-              if (auth().currentUser) {
-                await auth().signOut();
-              }
-              
-              // Sign out from Google
-              try {
-                await GoogleSignin.signOut();
-              } catch (e) {
-                // Ignore if not signed in with Google
-              }
+              await dispatch(logoutUser()).unwrap();
               
               // Navigate back to Login
               navigation.dispatch(
@@ -263,7 +227,7 @@ const ProfileScreen = () => {
           <TouchableOpacity onPress={pickProfileImage} disabled={uploadingProfileImage}>
             <View>
               <Image 
-                source={userData?.profile_photo ? { uri: userData.profile_photo } : fallbackImage}
+                source={userInfo?.profile_photo ? { uri: userInfo.profile_photo } : fallbackImage}
                 style={styles.avatar} 
               />
               <View style={styles.editAvatarBadge}>
@@ -271,8 +235,8 @@ const ProfileScreen = () => {
               </View>
             </View>
           </TouchableOpacity>
-          <Text style={styles.name}>{userData?.name || 'User'}</Text>
-          <Text style={styles.email}>{userData?.email || 'No Email'}</Text>
+          <Text style={styles.name}>{userInfo?.name || 'User'}</Text>
+          <Text style={styles.email}>{userInfo?.email || 'No Email'}</Text>
           
           <TouchableOpacity 
             style={styles.editButton}

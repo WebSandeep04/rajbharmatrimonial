@@ -18,10 +18,13 @@ import LinearGradient from 'react-native-linear-gradient';
 import api from '../services/api';
 import { colors } from '../theme/colors';
 import { typography } from '../theme/typography';
+import { useAppDispatch } from '../store/hooks';
+import { setCredentials } from '../store/slices/authSlice';
 
 const LoginScreen = () => {
   const [loading, setLoading] = useState(false);
   const navigation = useNavigation();
+  const dispatch = useAppDispatch();
 
   useEffect(() => {
     GoogleSignin.configure({
@@ -54,8 +57,15 @@ const LoginScreen = () => {
       });
 
       if (response.data && response.data.token) {
+        // Still save to AsyncStorage for persistence across app restarts
         await AsyncStorage.setItem('userToken', response.data.token);
         await AsyncStorage.setItem('userInfo', JSON.stringify(response.data.user));
+
+        // Dispatch to Redux store
+        dispatch(setCredentials({
+          token: response.data.token,
+          userInfo: response.data.user
+        }));
 
         const user = response.data.user;
         const isProfileComplete = !!user.religion_id;
