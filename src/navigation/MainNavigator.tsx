@@ -48,7 +48,7 @@ const MainNavigator = () => {
         }}
       />
       <Tab.Screen
-        name="Activity"
+        name="Explore"
         component={SearchScreen}
         options={{
           tabBarIcon: ({ color, size }) => <Search color={color} size={size} />

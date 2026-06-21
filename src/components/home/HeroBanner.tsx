@@ -78,13 +78,6 @@ const HeroBanner = () => {
               <View style={styles.content}>
                 <Text style={styles.title}>{slide.title}</Text>
                 <Text style={styles.subtitle}>{slide.subtitle}</Text>
-                <TouchableOpacity 
-                  style={styles.button} 
-                  activeOpacity={0.8}
-                  onPress={() => navigation.navigate('Search')}
-                >
-                  <Text style={styles.buttonText}>{slide.buttonText}</Text>
-                </TouchableOpacity>
               </View>
             </LinearGradient>
           </View>

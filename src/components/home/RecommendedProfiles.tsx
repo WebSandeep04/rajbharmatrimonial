@@ -74,7 +74,7 @@ const RecommendedProfiles = () => {
     <View style={styles.container}>
       <View style={styles.headerRow}>
         <Text style={styles.sectionTitle}>Recommended For You</Text>
-        <TouchableOpacity>
+        <TouchableOpacity onPress={() => navigation.navigate('Explore')}>
           <Text style={styles.seeAll}>See All</Text>
         </TouchableOpacity>
       </View>

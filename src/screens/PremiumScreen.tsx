@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, SafeAreaView } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { CheckCircle2, ChevronLeft, Crown } from 'lucide-react-native';
 import LinearGradient from 'react-native-linear-gradient';
@@ -7,31 +8,21 @@ import { colors } from '../theme/colors';
 
 const PremiumScreen = () => {
   const navigation = useNavigation<any>();
+  const insets = useSafeAreaInsets();
 
   const plans = [
-    { name: '1 Month', price: '₹999', recommended: false },
-    { name: '3 Months', price: '₹2499', recommended: true },
-    { name: '6 Months', price: '₹3999', recommended: false },
+    { name: 'Monthly Plan', price: '₹99 / month', recommended: true },
   ];
 
   const features = [
-    'See exactly who liked your profile',
-    'Unlimited direct messages without matching',
-    'Access to contact details (phone/email)',
-    'Priority profile visibility in search',
-    'Advanced search filters (Education, Income)',
-    'Premium badge on your profile',
+    'Unlimited chat',
+    'Unlimited matches',
+    'Get priority visibility',
   ];
 
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView contentContainerStyle={styles.container}>
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-            <ChevronLeft size={28} color={colors.textDark} />
-          </TouchableOpacity>
-        </View>
-
         <LinearGradient
           colors={[colors.primary, colors.secondary]}
           style={styles.heroSection}
@@ -77,7 +68,7 @@ const PremiumScreen = () => {
         </View>
       </ScrollView>
 
-      <View style={styles.footer}>
+      <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom + 20, 40) }]}>
         <TouchableOpacity style={styles.subscribeButton} activeOpacity={0.9}>
           <Text style={styles.subscribeButtonText}>Continue to Payment</Text>
         </TouchableOpacity>
@@ -89,7 +80,7 @@ const PremiumScreen = () => {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#F9FAFB',
+    backgroundColor: '#FFF',
   },
   container: {
     paddingBottom: 40,
@@ -113,6 +104,7 @@ const styles = StyleSheet.create({
   },
   heroSection: {
     marginHorizontal: 20,
+    marginTop: 20,
     borderRadius: 24,
     padding: 30,
     alignItems: 'center',
@@ -207,6 +199,7 @@ const styles = StyleSheet.create({
   },
   footer: {
     padding: 20,
+    paddingBottom: 40,
     backgroundColor: '#FFF',
     borderTopWidth: 1,
     borderTopColor: '#F3F4F6',

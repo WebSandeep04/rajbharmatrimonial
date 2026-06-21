@@ -2,11 +2,13 @@ import React, { useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Animated, Dimensions } from 'react-native';
 import { Crown, Check } from 'lucide-react-native';
 import LinearGradient from 'react-native-linear-gradient';
+import { useNavigation } from '@react-navigation/native';
 import { colors } from '../../theme/colors';
 
 const { width } = Dimensions.get('window');
 
 const PremiumBanner = () => {
+  const navigation = useNavigation<any>();
   const shimmerValue = useRef(new Animated.Value(-1)).current;
 
   useEffect(() => {
@@ -74,7 +76,11 @@ const PremiumBanner = () => {
           ))}
         </View>
 
-        <TouchableOpacity style={styles.button} activeOpacity={0.9}>
+        <TouchableOpacity 
+          style={styles.button} 
+          activeOpacity={0.9}
+          onPress={() => navigation.navigate('Premium')}
+        >
           <Text style={styles.buttonText}>Upgrade Now</Text>
         </TouchableOpacity>
       </LinearGradient>
