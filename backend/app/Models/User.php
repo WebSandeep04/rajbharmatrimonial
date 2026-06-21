@@ -25,6 +25,7 @@ class User extends Authenticatable
         'email',
         'password',
         'firebase_uid',
+        'fcm_token',
         'profile_photo',
         'is_active',
         'religion_id',

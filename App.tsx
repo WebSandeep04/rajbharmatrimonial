@@ -1,10 +1,14 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { StatusBar } from 'react-native';
 import { Provider } from 'react-redux';
 import { store } from './src/store';
+
+// Navigation
+import { navigationRef } from './src/navigation/RootNavigation';
+import { NotificationService } from './src/services/NotificationService';
 
 // Screens
 import SplashScreen from './src/screens/SplashScreen';
@@ -19,11 +23,18 @@ import PremiumScreen from './src/screens/PremiumScreen';
 const Stack = createNativeStackNavigator();
 
 function App() {
+  useEffect(() => {
+    // Request permissions and get token
+    NotificationService.requestUserPermission();
+    // Initialize notification handlers
+    NotificationService.initialize();
+  }, []);
+
   return (
     <Provider store={store}>
       <SafeAreaProvider>
         <StatusBar hidden={true} />
-        <NavigationContainer>
+        <NavigationContainer ref={navigationRef}>
           <Stack.Navigator 
             initialRouteName="Splash"
             screenOptions={{
