@@ -7,7 +7,8 @@ import {
   ActivityIndicator,
   Alert,
   TextInput,
-  Switch
+  Switch,
+  StyleSheet
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Picker } from '@react-native-picker/picker';
@@ -18,10 +19,24 @@ import { styles } from '../styles/ProfileSetupScreenStyles';
 import { useAppDispatch, useAppSelector } from '../store/hooks';
 import { fetchMasterDataAndProfile, saveProfileData } from '../store/slices/profileSetupSlice';
 
-const MASTER_ENDPOINTS = [
-  'religion', 'caste', 'gotra', 'nakshatra', 'rashi', 'state', 'city',
-  'highest_education', 'profession', 'income_range', 'body_type',
-  'complexion', 'blood_group', 'diet', 'marital_status', 'family_type', 'profile_created_for'
+const SECTIONS = [
+  'Basic Info',
+  'Education & Career',
+  'Family Details',
+  'Astrology Details',
+  'Physical Attributes & Location',
+  'Lifestyle',
+  'About Yourself'
+];
+
+const SECTION_FIELDS = [
+  ['profile_created_for_id', 'religion_id', 'caste_id', 'gotra_id', 'marital_status_id', 'height', 'weight'],
+  ['highest_education_id', 'profession_id', 'income_range_id'],
+  ['family_type_id', 'mother_name', 'mother_occupation', 'father_name', 'father_occupation', 'no_of_brothers', 'no_of_sisters'],
+  ['nakshatra_id', 'rashi_id', 'manglik_status'],
+  ['body_type_id', 'complexion_id', 'blood_group_id', 'state_id', 'city_id'],
+  ['diet_id', 'smoking', 'drinking'],
+  ['bio']
 ];
 
 const ProfileSetupScreen = () => {
@@ -31,6 +46,8 @@ const ProfileSetupScreen = () => {
   const dispatch = useAppDispatch();
   
   const { masterDataOptions, loadingMasterData, savingProfile } = useAppSelector((state) => state.profileSetup);
+
+  const [currentSection, setCurrentSection] = useState(0);
 
   const [formData, setFormData] = useState<any>({
     smoking: false, drinking: false, manglik_status: false, verification: false,
@@ -94,11 +111,28 @@ const ProfileSetupScreen = () => {
     setFormData((prev: any) => ({ ...prev, [field]: value }));
   };
 
+  const handleNext = () => {
+    // Validate current section
+    const currentFields = SECTION_FIELDS[currentSection];
+    for (const field of currentFields) {
+      if (typeof formData[field] === 'string' && formData[field].trim() === '') {
+        Alert.alert('Incomplete', 'Please fill in all the mandatory fields before proceeding to the next section.');
+        return;
+      }
+    }
+    setCurrentSection(prev => prev + 1);
+  };
+
+  const handlePrevious = () => {
+    setCurrentSection(prev => prev - 1);
+  };
+
   const handleSubmit = async () => {
-    // Basic validation check to ensure no fields are completely empty strings (except booleans which are false)
-    for (const key of Object.keys(formData)) {
-      if (typeof formData[key] === 'string' && formData[key].trim() === '') {
-        Alert.alert('Incomplete', 'Please fill in all the required fields.');
+    // Validate the last section before submitting
+    const currentFields = SECTION_FIELDS[currentSection];
+    for (const field of currentFields) {
+      if (typeof formData[field] === 'string' && formData[field].trim() === '') {
+        Alert.alert('Incomplete', 'Please fill in all the mandatory fields.');
         return;
       }
     }
@@ -140,6 +174,12 @@ const ProfileSetupScreen = () => {
     );
   }
 
+  const renderLabel = (label: string, isMandatory: boolean = true) => (
+    <Text style={styles.label}>
+      {label} {isMandatory && <Text style={{ color: 'red' }}>*</Text>}
+    </Text>
+  );
+
   const renderPicker = (field: string, label: string) => {
     let options = masterDataOptions[field] || [];
     
@@ -152,7 +192,7 @@ const ProfileSetupScreen = () => {
 
     return (
       <View style={styles.inputGroup} key={field}>
-        <Text style={styles.label}>{label}</Text>
+        {renderLabel(label)}
         <View style={styles.pickerContainer}>
           <Picker
             selectedValue={formData[`${field}_id`]}
@@ -170,7 +210,7 @@ const ProfileSetupScreen = () => {
 
   const renderInput = (field: string, label: string, keyboardType = 'default') => (
     <View style={styles.inputGroup} key={field}>
-      <Text style={styles.label}>{label}</Text>
+      {renderLabel(label)}
       <TextInput
         style={styles.input}
         value={String(formData[field])}
@@ -193,7 +233,7 @@ const ProfileSetupScreen = () => {
   );
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: '#FFF0F5' }]}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.header}>
           <Text style={typography.h2}>{isEditing ? 'Edit Your Profile' : 'Complete Your Profile'}</Text>
@@ -202,85 +242,138 @@ const ProfileSetupScreen = () => {
           </Text>
         </View>
 
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Basic Info</Text>
-          {renderPicker('profile_created_for', 'Profile Created For')}
-          {renderPicker('religion', 'Religion')}
-          {renderPicker('caste', 'Caste')}
-          {renderPicker('gotra', 'Gotra')}
-          {renderPicker('marital_status', 'Marital Status')}
-          {renderInput('height', 'Height (e.g. 5ft 8in)')}
-          {renderInput('weight', 'Weight (kg)', 'numeric')}
-        </View>
-
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Education & Career</Text>
-          {renderPicker('highest_education', 'Highest Education')}
-          {renderPicker('profession', 'Profession')}
-          {renderPicker('income_range', 'Income Range')}
-        </View>
-
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Family Details</Text>
-          {renderPicker('family_type', 'Family Type')}
-          {renderInput('mother_name', 'Mother Name')}
-          {renderInput('mother_occupation', 'Mother Occupation')}
-          {renderInput('father_name', 'Father Name')}
-          {renderInput('father_occupation', 'Father Occupation')}
-          {renderInput('no_of_brothers', 'No. of Brothers', 'numeric')}
-          {renderInput('no_of_sisters', 'No. of Sisters', 'numeric')}
-        </View>
-
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Astrology Details</Text>
-          {renderPicker('nakshatra', 'Nakshatra')}
-          {renderPicker('rashi', 'Rashi')}
-          {renderSwitch('manglik_status', 'Are you Manglik?')}
-        </View>
-
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Physical Attributes & Location</Text>
-          {renderPicker('body_type', 'Body Type')}
-          {renderPicker('complexion', 'Complexion')}
-          {renderPicker('blood_group', 'Blood Group')}
-          {renderPicker('state', 'State')}
-          {renderPicker('city', 'City')}
-        </View>
-
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Lifestyle</Text>
-          {renderPicker('diet', 'Diet')}
-          {renderSwitch('smoking', 'Do you Smoke?')}
-          {renderSwitch('drinking', 'Do you Drink?')}
-        </View>
-
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>About Yourself</Text>
-          <View style={styles.inputGroup}>
-            <TextInput
-              style={[styles.input, { height: 100, textAlignVertical: 'top' }]}
-              value={formData.bio}
-              onChangeText={(val) => handleChange('bio', val)}
-              placeholder="Write a little about yourself..."
-              multiline
-            />
+        {/* Progress Indicator */}
+        <View style={{ marginBottom: 20 }}>
+          <Text style={{ fontSize: 14, color: colors.textDark, marginBottom: 8, fontWeight: '600' }}>
+            Step {currentSection + 1} of {SECTIONS.length}
+          </Text>
+          <View style={{ flexDirection: 'row', height: 6, backgroundColor: '#E5E7EB', borderRadius: 3, overflow: 'hidden' }}>
+            {SECTIONS.map((_, index) => (
+              <View 
+                key={index}
+                style={{
+                  flex: 1,
+                  backgroundColor: index <= currentSection ? colors.primary : 'transparent',
+                  marginRight: index < SECTIONS.length - 1 ? 2 : 0,
+                  borderRadius: 3,
+                }}
+              />
+            ))}
           </View>
         </View>
 
-        <TouchableOpacity 
-          style={[styles.submitButton, savingProfile && { opacity: 0.7 }]} 
-          onPress={handleSubmit}
-          disabled={savingProfile}
-        >
-          {savingProfile ? (
-            <ActivityIndicator color="#fff" />
-          ) : (
-            <Text style={styles.submitButtonText}>Save Profile</Text>
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>{SECTIONS[currentSection]}</Text>
+          
+          {currentSection === 0 && (
+            <>
+              {renderPicker('profile_created_for', 'Profile Created For')}
+              {renderPicker('religion', 'Religion')}
+              {renderPicker('caste', 'Caste')}
+              {renderPicker('gotra', 'Gotra')}
+              {renderPicker('marital_status', 'Marital Status')}
+              {renderInput('height', 'Height (e.g. 5ft 8in)')}
+              {renderInput('weight', 'Weight (kg)', 'numeric')}
+            </>
           )}
-        </TouchableOpacity>
+
+          {currentSection === 1 && (
+            <>
+              {renderPicker('highest_education', 'Highest Education')}
+              {renderPicker('profession', 'Profession')}
+              {renderPicker('income_range', 'Income Range')}
+            </>
+          )}
+
+          {currentSection === 2 && (
+            <>
+              {renderPicker('family_type', 'Family Type')}
+              {renderInput('mother_name', 'Mother Name')}
+              {renderInput('mother_occupation', 'Mother Occupation')}
+              {renderInput('father_name', 'Father Name')}
+              {renderInput('father_occupation', 'Father Occupation')}
+              {renderInput('no_of_brothers', 'No. of Brothers', 'numeric')}
+              {renderInput('no_of_sisters', 'No. of Sisters', 'numeric')}
+            </>
+          )}
+
+          {currentSection === 3 && (
+            <>
+              {renderPicker('nakshatra', 'Nakshatra')}
+              {renderPicker('rashi', 'Rashi')}
+              {renderSwitch('manglik_status', 'Are you Manglik?')}
+            </>
+          )}
+
+          {currentSection === 4 && (
+            <>
+              {renderPicker('body_type', 'Body Type')}
+              {renderPicker('complexion', 'Complexion')}
+              {renderPicker('blood_group', 'Blood Group')}
+              {renderPicker('state', 'State')}
+              {renderPicker('city', 'City')}
+            </>
+          )}
+
+          {currentSection === 5 && (
+            <>
+              {renderPicker('diet', 'Diet')}
+              {renderSwitch('smoking', 'Do you Smoke?')}
+              {renderSwitch('drinking', 'Do you Drink?')}
+            </>
+          )}
+
+          {currentSection === 6 && (
+            <>
+              <View style={styles.inputGroup}>
+                {renderLabel('Bio')}
+                <TextInput
+                  style={[styles.input, { height: 100, textAlignVertical: 'top' }]}
+                  value={formData.bio}
+                  onChangeText={(val) => handleChange('bio', val)}
+                  placeholder="Write a little about yourself..."
+                  multiline
+                />
+              </View>
+            </>
+          )}
+        </View>
+
+        <View style={{ flexDirection: 'row', justifyContent: 'center', marginTop: 20 }}>
+          {currentSection > 0 && (
+            <TouchableOpacity 
+              style={[styles.submitButton, { width: 140, marginRight: 15, backgroundColor: '#888' }]} 
+              onPress={handlePrevious}
+            >
+              <Text style={styles.submitButtonText}>Previous</Text>
+            </TouchableOpacity>
+          )}
+
+          {currentSection < SECTIONS.length - 1 ? (
+            <TouchableOpacity 
+              style={[styles.submitButton, { width: 140 }]} 
+              onPress={handleNext}
+            >
+              <Text style={styles.submitButtonText}>Next</Text>
+            </TouchableOpacity>
+          ) : (
+            <TouchableOpacity 
+              style={[styles.submitButton, { width: 150 }, savingProfile && { opacity: 0.7 }]} 
+              onPress={handleSubmit}
+              disabled={savingProfile}
+            >
+              {savingProfile ? (
+                <ActivityIndicator color="#fff" />
+              ) : (
+                <Text style={styles.submitButtonText}>Save Profile</Text>
+              )}
+            </TouchableOpacity>
+          )}
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
 };
 
 export default ProfileSetupScreen;
+
