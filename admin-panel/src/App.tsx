@@ -4,6 +4,7 @@ import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import UserManagement from './pages/UserManagement';
 import MasterDataManagement from './pages/MasterDataManagement';
+import BroadcastNotifications from './pages/BroadcastNotifications';
 import { useSelector } from 'react-redux';
 import type { RootState } from './store';
 import './index.css';
@@ -31,6 +32,7 @@ const App: React.FC = () => {
         >
           <Route path="users" element={<UserManagement />} />
           <Route path="masters" element={<MasterDataManagement />} />
+          <Route path="broadcast" element={<BroadcastNotifications />} />
         </Route>
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>

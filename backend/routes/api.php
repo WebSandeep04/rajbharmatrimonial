@@ -3,8 +3,7 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
-use App\Http\Controllers\Api\AdminAuthController;
-use App\Http\Controllers\Api\Admin\AdminAuthController as AdminAdminAuthController;
+use App\Http\Controllers\Api\AdminAuthController as AdminAdminAuthController;
 use App\Http\Controllers\Api\Admin\UserController as AdminUserController;
 
 /*
@@ -24,6 +23,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/profile', [AuthController::class, 'profile']);
     Route::put('/profile', [AuthController::class, 'updateProfile']);
     Route::post('/fcm-token', [AuthController::class, 'updateFcmToken']);
+    Route::post('/chat/notify', [\App\Http\Controllers\Api\MatchController::class, 'notifyChat']);
     Route::get('/matches', [\App\Http\Controllers\Api\MatchController::class, 'getRecommendedMatches']);
     Route::post('/matches/search', [\App\Http\Controllers\Api\MatchController::class, 'search']);
     Route::get('/users/{id}', [\App\Http\Controllers\Api\MatchController::class, 'getUserProfile']);
@@ -72,5 +72,8 @@ Route::prefix('admin')->group(function () {
         Route::apiResource('marital_status-masters', \App\Http\Controllers\Api\Admin\MaritalStatusMasterController::class)->except(['show']);
         Route::apiResource('family_type-masters', \App\Http\Controllers\Api\Admin\FamilyTypeMasterController::class)->except(['show']);
         Route::apiResource('profile_created_for-masters', \App\Http\Controllers\Api\Admin\ProfileCreatedForMasterController::class)->except(['show']);
+
+        // Notifications
+        Route::post('/notifications/broadcast', [\App\Http\Controllers\Api\Admin\NotificationController::class, 'broadcast']);
     });
 });

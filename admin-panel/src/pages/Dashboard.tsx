@@ -55,6 +55,10 @@ const Dashboard: React.FC = () => {
             <Database size={20} />
             Master Data
           </Link>
+          <Link to="/dashboard/broadcast" className={`nav-link ${location.pathname.includes('/dashboard/broadcast') ? 'active' : ''}`}>
+            <Bell size={20} />
+            Broadcast Notification
+          </Link>
           <a href="#" className="nav-link">
             <Settings size={20} />
             Settings

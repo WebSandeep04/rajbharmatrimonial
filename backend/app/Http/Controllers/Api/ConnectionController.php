@@ -38,6 +38,19 @@ class ConnectionController extends Controller
             'status' => 'pending'
         ]);
 
+        // Send Push Notification
+        $receiver = \App\Models\User::find($receiverId);
+        $sender = $request->user();
+        if ($receiver) {
+            $firebaseService = new \App\Services\FirebaseService();
+            $firebaseService->sendNotification(
+                $receiver,
+                'New Connection Request!',
+                $sender->name . ' wants to connect with you.',
+                ['type' => 'match', 'userId' => (string)$sender->id]
+            );
+        }
+
         return response()->json(['message' => 'Connection request sent.', 'connection' => $connection]);
     }
 
@@ -54,6 +67,20 @@ class ConnectionController extends Controller
 
         $connection->status = $request->action === 'accept' ? 'accepted' : 'rejected';
         $connection->save();
+
+        if ($connection->status === 'accepted') {
+            $sender = \App\Models\User::find($connection->sender_id);
+            $receiver = $request->user();
+            if ($sender) {
+                $firebaseService = new \App\Services\FirebaseService();
+                $firebaseService->sendNotification(
+                    $sender,
+                    'Connection Accepted! 🎉',
+                    $receiver->name . ' accepted your request. You can now chat!',
+                    ['type' => 'chat', 'userId' => (string)$receiver->id]
+                );
+            }
+        }
 
         return response()->json(['message' => 'Request ' . $connection->status, 'connection' => $connection]);
     }

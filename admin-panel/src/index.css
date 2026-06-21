@@ -111,6 +111,28 @@ body {
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25);
 }
 
+.form-control {
+  width: 100%;
+  padding: 0.875rem 1rem;
+  background-color: var(--input-bg);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  color: var(--text-primary);
+  font-size: 1rem;
+  transition: all 0.2s ease;
+  font-family: inherit;
+}
+
+.form-control:focus {
+  outline: none;
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25);
+}
+
+.form-control::placeholder {
+  color: var(--text-secondary);
+}
+
 .input-icon {
   position: absolute;
   left: 0.875rem;

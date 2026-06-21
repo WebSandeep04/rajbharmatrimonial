@@ -79,8 +79,12 @@ const ChatScreen = () => {
 
   const onSend = useCallback((newMessages: IMessage[] = []) => {
     if (!activeRoomId) return;
-    dispatch(sendChatMessage({ roomId: activeRoomId, messages: newMessages }));
-  }, [dispatch, activeRoomId]);
+    dispatch(sendChatMessage({ 
+      roomId: activeRoomId, 
+      messages: newMessages,
+      receiverId: targetUser?.id?.toString()
+    }));
+  }, [dispatch, activeRoomId, targetUser]);
 
   return (
     <SafeAreaView 

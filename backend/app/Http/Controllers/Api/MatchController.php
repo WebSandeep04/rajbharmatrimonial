@@ -141,4 +141,27 @@ class MatchController extends Controller
             'gallery' => $user->images->map(function($img) { return $img->image_path; }),
         ]);
     }
+
+    public function notifyChat(Request $request)
+    {
+        $request->validate([
+            'receiver_id' => 'required|exists:users,id',
+            'message' => 'required|string|max:255',
+        ]);
+
+        $sender = $request->user();
+        $receiver = User::find($request->receiver_id);
+
+        if ($receiver) {
+            $firebaseService = new \App\Services\FirebaseService();
+            $firebaseService->sendNotification(
+                $receiver,
+                $sender->name,
+                $request->message,
+                ['type' => 'chat', 'userId' => (string)$sender->id]
+            );
+        }
+
+        return response()->json(['message' => 'Chat notification sent']);
+    }
 }

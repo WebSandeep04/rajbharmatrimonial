@@ -56,9 +56,23 @@ export const initializeChatRoom = createAsyncThunk(
 // Thunk to send a message
 export const sendChatMessage = createAsyncThunk(
   'chat/sendChatMessage',
-  async ({ roomId, messages }: { roomId: string, messages: IMessage[] }, { rejectWithValue }) => {
+  async ({ roomId, messages, receiverId }: { roomId: string, messages: IMessage[], receiverId?: string }, { rejectWithValue }) => {
     try {
       await sendMessage(roomId, messages);
+      
+      // Notify backend to send FCM push notification
+      if (receiverId && messages.length > 0) {
+        try {
+          const api = require('../../services/api').default;
+          await api.post('/chat/notify', {
+            receiver_id: receiverId,
+            message: messages[0].text || 'Sent an attachment'
+          });
+        } catch (e) {
+          console.log('Failed to trigger chat push notification', e);
+        }
+      }
+
       return { roomId, messages };
     } catch (error: any) {
       return rejectWithValue(error.message || 'Failed to send message');
