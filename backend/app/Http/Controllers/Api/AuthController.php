@@ -117,6 +117,8 @@ class AuthController extends Controller
             'mother_name' => 'required|string',
             'father_name' => 'required|string',
             'bio' => 'required|string',
+            'custom_profession' => 'nullable|string',
+            'custom_education' => 'nullable|string',
         ];
 
         $validated = $request->validate($rules);

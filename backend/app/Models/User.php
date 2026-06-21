@@ -57,6 +57,8 @@ class User extends Authenticatable
         'mother_name',
         'father_name',
         'bio',
+        'custom_profession',
+        'custom_education',
     ];
 
     /**

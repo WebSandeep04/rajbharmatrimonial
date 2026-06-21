@@ -31,8 +31,8 @@ class MatchController extends Controller
                     'name' => $user->name,
                     'age' => $user->age ?? 25, // Fallback if age isn't implemented
                     'city' => $user->city ? $user->city->name : 'Unknown',
-                    'profession' => $user->profession ? $user->profession->name : 'Not Specified',
-                    'education' => $user->highest_education ? $user->highest_education->name : 'Not Specified',
+                    'profession' => $user->profession ? (strtolower($user->profession->name) === 'other' && $user->custom_profession ? $user->custom_profession : $user->profession->name) : 'Not Specified',
+                    'education' => $user->highest_education ? (strtolower($user->highest_education->name) === 'other' && $user->custom_education ? $user->custom_education : $user->highest_education->name) : 'Not Specified',
                     'matchPercentage' => rand(70, 99), // Mock percentage for now
                     'verified' => (bool)$user->verification,
                     'image' => $user->profile_photo ?: 'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png',
@@ -78,8 +78,8 @@ class MatchController extends Controller
                 'name' => $user->name,
                 'age' => $user->age ?? 25,
                 'city' => $user->city ? $user->city->name : 'Unknown',
-                'profession' => $user->profession ? $user->profession->name : 'Not Specified',
-                'education' => $user->highest_education ? $user->highest_education->name : 'Not Specified',
+                'profession' => $user->profession ? (strtolower($user->profession->name) === 'other' && $user->custom_profession ? $user->custom_profession : $user->profession->name) : 'Not Specified',
+                'education' => $user->highest_education ? (strtolower($user->highest_education->name) === 'other' && $user->custom_education ? $user->custom_education : $user->highest_education->name) : 'Not Specified',
                 'matchPercentage' => rand(70, 99),
                 'verified' => (bool)$user->verification,
                 'image' => $user->profile_photo ?: 'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png',
@@ -103,8 +103,8 @@ class MatchController extends Controller
             'age' => $user->age ?? 25,
             'city' => $user->city ? $user->city->name : 'Not Specified',
             'state' => $user->state ? $user->state->name : 'Not Specified',
-            'profession' => $user->profession ? $user->profession->name : 'Not Specified',
-            'education' => $user->highest_education ? $user->highest_education->name : 'Not Specified',
+            'profession' => $user->profession ? (strtolower($user->profession->name) === 'other' && $user->custom_profession ? $user->custom_profession : $user->profession->name) : 'Not Specified',
+            'education' => $user->highest_education ? (strtolower($user->highest_education->name) === 'other' && $user->custom_education ? $user->custom_education : $user->highest_education->name) : 'Not Specified',
             'income' => $user->income_range ? $user->income_range->name : 'Not Specified',
             
             'religion' => $user->religion ? $user->religion->name : 'Not Specified',

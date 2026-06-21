@@ -39,6 +39,29 @@ const SECTION_FIELDS = [
   ['bio']
 ];
 
+const MARRIAGE_SLOGANS = [
+  "Two souls, one beautiful journey.",
+  "A successful marriage requires falling in love many times, always with the same person.",
+  "The best thing to hold onto in life is each other.",
+  "Where there is love, there is life.",
+  "Together is a beautiful place to be.",
+  "Love is the master key that opens the gates of happiness.",
+  "A happy marriage is a long conversation which always seems too short.",
+  "Your perfect match is out there, getting closer with every step.",
+  "Marriage is a mosaic you build with your spouse.",
+  "Soulmates are people who bring out the best in you.",
+  "True love stories never have endings.",
+  "Find the one who makes your heart smile.",
+  "A strong marriage is built on faith, love, and understanding.",
+  "Every love story is beautiful, but yours will be your favorite.",
+  "Happiness is being married to your best friend.",
+  "The highest happiness on earth is the happiness of marriage.",
+  "Love is not about looking at each other, but looking in the same direction.",
+  "Two families, one beautiful bond.",
+  "Building a lifetime of memories, one step at a time.",
+  "A great marriage is not when the 'perfect couple' comes together, but when an imperfect couple learns to enjoy their differences."
+];
+
 const ProfileSetupScreen = () => {
   const navigation = useNavigation();
   const route = useRoute<any>();
@@ -48,6 +71,12 @@ const ProfileSetupScreen = () => {
   const { masterDataOptions, loadingMasterData, savingProfile } = useAppSelector((state) => state.profileSetup);
 
   const [currentSection, setCurrentSection] = useState(0);
+  const [currentSlogan, setCurrentSlogan] = useState('');
+
+  useEffect(() => {
+    const randomIndex = Math.floor(Math.random() * MARRIAGE_SLOGANS.length);
+    setCurrentSlogan(MARRIAGE_SLOGANS[randomIndex]);
+  }, [currentSection]);
 
   const [formData, setFormData] = useState<any>({
     smoking: false, drinking: false, manglik_status: false, verification: false,
@@ -56,7 +85,7 @@ const ProfileSetupScreen = () => {
     religion_id: '', caste_id: '', gotra_id: '', nakshatra_id: '', rashi_id: '',
     state_id: '', city_id: '', highest_education_id: '', profession_id: '', income_range_id: '',
     body_type_id: '', complexion_id: '', blood_group_id: '', diet_id: '', marital_status_id: '',
-    family_type_id: '', profile_created_for_id: ''
+    family_type_id: '', profile_created_for_id: '', custom_profession: '', custom_education: ''
   });
 
   useEffect(() => {
@@ -96,7 +125,9 @@ const ProfileSetupScreen = () => {
               diet_id: user.diet_id || '',
               marital_status_id: user.marital_status_id || '',
               family_type_id: user.family_type_id || '',
-              profile_created_for_id: user.profile_created_for_id || ''
+              profile_created_for_id: user.profile_created_for_id || '',
+              custom_profession: user.custom_profession || '',
+              custom_education: user.custom_education || ''
             });
           }
         }
@@ -111,14 +142,34 @@ const ProfileSetupScreen = () => {
     setFormData((prev: any) => ({ ...prev, [field]: value }));
   };
 
-  const handleNext = () => {
-    // Validate current section
-    const currentFields = SECTION_FIELDS[currentSection];
+  const validateSection = (sectionIndex: number) => {
+    const currentFields = SECTION_FIELDS[sectionIndex];
     for (const field of currentFields) {
       if (typeof formData[field] === 'string' && formData[field].trim() === '') {
-        Alert.alert('Incomplete', 'Please fill in all the mandatory fields before proceeding to the next section.');
-        return;
+        return false;
       }
+    }
+    
+    if (sectionIndex === 1) {
+      const eduOptions = masterDataOptions['highest_education'] || [];
+      const eduSelected = eduOptions.find((o: any) => o.id === formData.highest_education_id);
+      if (eduSelected?.name?.toLowerCase() === 'other' && (!formData.custom_education || formData.custom_education.trim() === '')) {
+        return false;
+      }
+      
+      const profOptions = masterDataOptions['profession'] || [];
+      const profSelected = profOptions.find((o: any) => o.id === formData.profession_id);
+      if (profSelected?.name?.toLowerCase() === 'other' && (!formData.custom_profession || formData.custom_profession.trim() === '')) {
+        return false;
+      }
+    }
+    return true;
+  };
+
+  const handleNext = () => {
+    if (!validateSection(currentSection)) {
+      Alert.alert('Incomplete', 'Please fill in all the mandatory fields before proceeding to the next section.');
+      return;
     }
     setCurrentSection(prev => prev + 1);
   };
@@ -128,13 +179,9 @@ const ProfileSetupScreen = () => {
   };
 
   const handleSubmit = async () => {
-    // Validate the last section before submitting
-    const currentFields = SECTION_FIELDS[currentSection];
-    for (const field of currentFields) {
-      if (typeof formData[field] === 'string' && formData[field].trim() === '') {
-        Alert.alert('Incomplete', 'Please fill in all the mandatory fields.');
-        return;
-      }
+    if (!validateSection(currentSection)) {
+      Alert.alert('Incomplete', 'Please fill in all the mandatory fields.');
+      return;
     }
 
     try {
@@ -190,6 +237,12 @@ const ProfileSetupScreen = () => {
       options = []; // Show no cities until state is selected
     }
 
+    const isOtherSelected = () => {
+      const selectedId = formData[`${field}_id`];
+      const selectedOption = options.find((opt: any) => opt.id === selectedId);
+      return selectedOption?.name?.toLowerCase() === 'other';
+    };
+
     return (
       <View style={styles.inputGroup} key={field}>
         {renderLabel(label)}
@@ -204,6 +257,14 @@ const ProfileSetupScreen = () => {
             ))}
           </Picker>
         </View>
+        {(field === 'profession' || field === 'highest_education') && isOtherSelected() && (
+          <TextInput
+            style={[styles.input, { marginTop: 10 }]}
+            value={field === 'profession' ? String(formData.custom_profession) : String(formData.custom_education)}
+            onChangeText={(val) => handleChange(field === 'profession' ? 'custom_profession' : 'custom_education', val)}
+            placeholder={`Enter your custom ${label.toLowerCase()}`}
+          />
+        )}
       </View>
     );
   };
@@ -234,16 +295,22 @@ const ProfileSetupScreen = () => {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: '#FFF0F5' }]}>
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        <View style={styles.header}>
+      <View style={{ paddingHorizontal: 20, paddingTop: 20 }}>
+        <View style={[styles.header, { marginTop: 0, marginBottom: 20 }]}>
           <Text style={typography.h2}>{isEditing ? 'Edit Your Profile' : 'Complete Your Profile'}</Text>
           <Text style={styles.subtitle}>
             {isEditing ? 'Update your personal details below.' : 'Please fill out all the details below to continue.'}
           </Text>
         </View>
 
-        {/* Progress Indicator */}
+        {/* Progress Indicator & Slogan */}
         <View style={{ marginBottom: 20 }}>
+          <View style={{ backgroundColor: '#fff', padding: 12, borderRadius: 8, borderLeftWidth: 4, borderLeftColor: colors.primary, elevation: 1, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.1, shadowRadius: 2, marginBottom: 15 }}>
+            <Text style={{ fontSize: 14, color: colors.primary, fontStyle: 'italic', textAlign: 'center' }}>
+              "{currentSlogan}"
+            </Text>
+          </View>
+          
           <Text style={{ fontSize: 14, color: colors.textDark, marginBottom: 8, fontWeight: '600' }}>
             Step {currentSection + 1} of {SECTIONS.length}
           </Text>
@@ -261,7 +328,9 @@ const ProfileSetupScreen = () => {
             ))}
           </View>
         </View>
+      </View>
 
+      <ScrollView contentContainerStyle={[styles.scrollContent, { paddingTop: 5, paddingBottom: 20 }]} showsVerticalScrollIndicator={false}>
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>{SECTIONS[currentSection]}</Text>
           
@@ -338,9 +407,10 @@ const ProfileSetupScreen = () => {
             </>
           )}
         </View>
+      </ScrollView>
 
-        <View style={{ flexDirection: 'row', justifyContent: 'center', marginTop: 20 }}>
-          {currentSection > 0 && (
+      <View style={{ flexDirection: 'row', justifyContent: 'center', paddingHorizontal: 20, paddingBottom: 20, paddingTop: 10, backgroundColor: '#FFF0F5' }}>
+        {currentSection > 0 && (
             <TouchableOpacity 
               style={[styles.submitButton, { width: 140, marginRight: 15, backgroundColor: '#888' }]} 
               onPress={handlePrevious}
@@ -370,7 +440,6 @@ const ProfileSetupScreen = () => {
             </TouchableOpacity>
           )}
         </View>
-      </ScrollView>
     </SafeAreaView>
   );
 };
