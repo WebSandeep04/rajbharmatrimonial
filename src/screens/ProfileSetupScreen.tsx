@@ -72,6 +72,7 @@ const ProfileSetupScreen = () => {
 
   const [currentSection, setCurrentSection] = useState(0);
   const [currentSlogan, setCurrentSlogan] = useState('');
+  const [errors, setErrors] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     const randomIndex = Math.floor(Math.random() * MARRIAGE_SLOGANS.length);
@@ -140,30 +141,40 @@ const ProfileSetupScreen = () => {
 
   const handleChange = (field: string, value: any) => {
     setFormData((prev: any) => ({ ...prev, [field]: value }));
+    if (errors[field]) {
+      setErrors((prev) => ({ ...prev, [field]: false }));
+    }
   };
 
   const validateSection = (sectionIndex: number) => {
+    let isValid = true;
+    const newErrors: Record<string, boolean> = {};
     const currentFields = SECTION_FIELDS[sectionIndex];
     for (const field of currentFields) {
       if (typeof formData[field] === 'string' && formData[field].trim() === '') {
-        return false;
+        newErrors[field] = true;
+        isValid = false;
       }
     }
     
     if (sectionIndex === 1) {
       const eduOptions = masterDataOptions['highest_education'] || [];
-      const eduSelected = eduOptions.find((o: any) => o.id === formData.highest_education_id);
+      const eduSelected = eduOptions.find((o: any) => String(o.id) === String(formData.highest_education_id));
       if (eduSelected?.name?.toLowerCase() === 'other' && (!formData.custom_education || formData.custom_education.trim() === '')) {
-        return false;
+        newErrors['custom_education'] = true;
+        isValid = false;
       }
       
       const profOptions = masterDataOptions['profession'] || [];
-      const profSelected = profOptions.find((o: any) => o.id === formData.profession_id);
+      const profSelected = profOptions.find((o: any) => String(o.id) === String(formData.profession_id));
       if (profSelected?.name?.toLowerCase() === 'other' && (!formData.custom_profession || formData.custom_profession.trim() === '')) {
-        return false;
+        newErrors['custom_profession'] = true;
+        isValid = false;
       }
     }
-    return true;
+    
+    setErrors(prev => ({ ...prev, ...newErrors }));
+    return isValid;
   };
 
   const handleNext = () => {
@@ -237,16 +248,10 @@ const ProfileSetupScreen = () => {
       options = []; // Show no cities until state is selected
     }
 
-    const isOtherSelected = () => {
-      const selectedId = formData[`${field}_id`];
-      const selectedOption = options.find((opt: any) => opt.id === selectedId);
-      return selectedOption?.name?.toLowerCase() === 'other';
-    };
-
     return (
       <View style={styles.inputGroup} key={field}>
         {renderLabel(label)}
-        <View style={styles.pickerContainer}>
+        <View style={[styles.pickerContainer, errors[`${field}_id`] && { borderColor: 'red', borderWidth: 1 }]}>
           <Picker
             selectedValue={formData[`${field}_id`]}
             onValueChange={(val) => handleChange(`${field}_id`, val)}
@@ -257,14 +262,6 @@ const ProfileSetupScreen = () => {
             ))}
           </Picker>
         </View>
-        {(field === 'profession' || field === 'highest_education') && isOtherSelected() && (
-          <TextInput
-            style={[styles.input, { marginTop: 10 }]}
-            value={field === 'profession' ? String(formData.custom_profession) : String(formData.custom_education)}
-            onChangeText={(val) => handleChange(field === 'profession' ? 'custom_profession' : 'custom_education', val)}
-            placeholder={`Enter your custom ${label.toLowerCase()}`}
-          />
-        )}
       </View>
     );
   };
@@ -273,7 +270,7 @@ const ProfileSetupScreen = () => {
     <View style={styles.inputGroup} key={field}>
       {renderLabel(label)}
       <TextInput
-        style={styles.input}
+        style={[styles.input, errors[field] && { borderColor: 'red', borderWidth: 1 }]}
         value={String(formData[field])}
         onChangeText={(val) => handleChange(field, val)}
         keyboardType={keyboardType as any}
@@ -294,7 +291,7 @@ const ProfileSetupScreen = () => {
   );
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: '#FFF0F5' }]}>
+    <SafeAreaView style={[styles.container, { backgroundColor: '#fff' }]}>
       <View style={{ paddingHorizontal: 20, paddingTop: 20 }}>
         <View style={[styles.header, { marginTop: 0, marginBottom: 20 }]}>
           <Text style={typography.h2}>{isEditing ? 'Edit Your Profile' : 'Complete Your Profile'}</Text>
@@ -349,7 +346,9 @@ const ProfileSetupScreen = () => {
           {currentSection === 1 && (
             <>
               {renderPicker('highest_education', 'Highest Education')}
+              {(masterDataOptions['highest_education'] || []).find((opt: any) => String(opt.id) === String(formData.highest_education_id))?.name?.toLowerCase() === 'other' && renderInput('custom_education', 'Specify Education')}
               {renderPicker('profession', 'Profession')}
+              {(masterDataOptions['profession'] || []).find((opt: any) => String(opt.id) === String(formData.profession_id))?.name?.toLowerCase() === 'other' && renderInput('custom_profession', 'Specify Profession')}
               {renderPicker('income_range', 'Income Range')}
             </>
           )}
@@ -397,7 +396,7 @@ const ProfileSetupScreen = () => {
               <View style={styles.inputGroup}>
                 {renderLabel('Bio')}
                 <TextInput
-                  style={[styles.input, { height: 100, textAlignVertical: 'top' }]}
+                  style={[styles.input, { height: 100, textAlignVertical: 'top' }, errors['bio'] && { borderColor: 'red', borderWidth: 1 }]}
                   value={formData.bio}
                   onChangeText={(val) => handleChange('bio', val)}
                   placeholder="Write a little about yourself..."
@@ -409,7 +408,7 @@ const ProfileSetupScreen = () => {
         </View>
       </ScrollView>
 
-      <View style={{ flexDirection: 'row', justifyContent: 'center', paddingHorizontal: 20, paddingBottom: 20, paddingTop: 10, backgroundColor: '#FFF0F5' }}>
+      <View style={{ flexDirection: 'row', justifyContent: 'center', paddingHorizontal: 20, paddingBottom: 20, paddingTop: 10, backgroundColor: '#fff' }}>
         {currentSection > 0 && (
             <TouchableOpacity 
               style={[styles.submitButton, { width: 140, marginRight: 15, backgroundColor: '#888' }]} 

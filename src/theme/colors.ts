@@ -2,7 +2,7 @@ export const colors = {
   primary: '#8B1538', // Deep Maroon
   primaryLight: '#B03058',
   secondary: '#D4AF37', // Gold
-  background: '#F3F4F6', // Modern cool light gray
+  background: '#FFFFFF', // Modern cool light gray
   surface: '#FFFFFF', // Pure White for cards
   textDark: '#111827', // Very dark slate (modern black)
   textLight: '#6B7280', // Cool gray
