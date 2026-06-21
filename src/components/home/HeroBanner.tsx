@@ -1,39 +1,108 @@
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import React, { useState, useRef, useEffect } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Dimensions, Animated } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
 import { colors } from '../../theme/colors';
-import { typography } from '../../theme/typography';
+
+const { width } = Dimensions.get('window');
+const SLIDE_WIDTH = width - 40; 
+
+const SLIDES = [
+  {
+    id: 1,
+    title: 'Find Your Perfect Match ❤️',
+    subtitle: 'Discover profiles that truly match your values.',
+    buttonText: 'Explore Now',
+  },
+  {
+    id: 2,
+    title: 'Verified Profiles ✓',
+    subtitle: 'Connect with genuine and trusted members.',
+    buttonText: 'Get Verified',
+  },
+  {
+    id: 3,
+    title: 'Success Stories 💍',
+    subtitle: 'Your soulmate may be just one click away.',
+    buttonText: 'Read Stories',
+  }
+];
 
 const HeroBanner = () => {
   const navigation = useNavigation<any>();
+  const [activeIndex, setActiveIndex] = useState(0);
+  const scrollViewRef = useRef<ScrollView>(null);
+  
+  useEffect(() => {
+    const interval = setInterval(() => {
+      let nextIndex = activeIndex + 1;
+      if (nextIndex >= SLIDES.length) {
+        nextIndex = 0;
+      }
+      scrollViewRef.current?.scrollTo({ x: nextIndex * SLIDE_WIDTH, animated: true });
+      setActiveIndex(nextIndex);
+    }, 4000);
+
+    return () => clearInterval(interval);
+  }, [activeIndex]);
+
+  const handleScroll = (event: any) => {
+    const slideSize = event.nativeEvent.layoutMeasurement.width;
+    const index = Math.floor(event.nativeEvent.contentOffset.x / slideSize);
+    if (index !== activeIndex) {
+      setActiveIndex(index);
+    }
+  };
 
   return (
     <View style={styles.container}>
-      <LinearGradient
-        colors={colors.gradientPrimary}
-        style={styles.gradient}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
+      <ScrollView
+        ref={scrollViewRef}
+        horizontal
+        pagingEnabled
+        showsHorizontalScrollIndicator={false}
+        onMomentumScrollEnd={handleScroll}
+        scrollEventThrottle={16}
       >
-        {/* Decorative elements */}
-        <View style={styles.circle1} />
-        <View style={styles.circle2} />
+        {SLIDES.map((slide, index) => (
+          <View key={slide.id} style={{ width: SLIDE_WIDTH }}>
+            <LinearGradient
+              colors={colors.gradientPrimary}
+              style={styles.gradient}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+            >
+              <View style={styles.circle1} />
+              <View style={styles.circle2} />
+      
+              <View style={styles.content}>
+                <Text style={styles.title}>{slide.title}</Text>
+                <Text style={styles.subtitle}>{slide.subtitle}</Text>
+                <TouchableOpacity 
+                  style={styles.button} 
+                  activeOpacity={0.8}
+                  onPress={() => navigation.navigate('Search')}
+                >
+                  <Text style={styles.buttonText}>{slide.buttonText}</Text>
+                </TouchableOpacity>
+              </View>
+            </LinearGradient>
+          </View>
+        ))}
+      </ScrollView>
 
-        <View style={styles.content}>
-          <Text style={styles.title}>Your Perfect Match May Be One Click Away</Text>
-          <Text style={styles.subtitle}>
-            Discover compatible profiles based on your preferences
-          </Text>
-          <TouchableOpacity 
-            style={styles.button} 
-            activeOpacity={0.8}
-            onPress={() => navigation.navigate('Search')}
-          >
-            <Text style={styles.buttonText}>Explore Matches</Text>
-          </TouchableOpacity>
-        </View>
-      </LinearGradient>
+      {/* Pagination Dots */}
+      <View style={styles.pagination}>
+        {SLIDES.map((_, index) => (
+          <View
+            key={index}
+            style={[
+              styles.dot,
+              activeIndex === index ? styles.activeDot : styles.inactiveDot
+            ]}
+          />
+        ))}
+      </View>
     </View>
   );
 };
@@ -41,19 +110,14 @@ const HeroBanner = () => {
 const styles = StyleSheet.create({
   container: {
     marginHorizontal: 20,
-    marginTop: 16,
-    marginBottom: 24,
-    borderRadius: 24,
-    elevation: 8,
-    shadowColor: colors.primary,
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.25,
-    shadowRadius: 12,
+    marginTop: 10,
+    marginBottom: 20,
   },
   gradient: {
     borderRadius: 24,
     overflow: 'hidden',
     position: 'relative',
+    height: 180,
   },
   circle1: {
     position: 'absolute',
@@ -76,24 +140,25 @@ const styles = StyleSheet.create({
   content: {
     padding: 24,
     zIndex: 2,
+    flex: 1,
+    justifyContent: 'center',
   },
   title: {
-    ...typography.h2,
     color: '#FFFFFF',
-    marginBottom: 10,
-    lineHeight: 34,
-    fontSize: 26,
+    marginBottom: 8,
+    fontWeight: '800',
+    fontSize: 22,
   },
   subtitle: {
-    ...typography.subtitle,
-    color: 'rgba(255,255,255,0.85)',
-    marginBottom: 28,
-    fontSize: 15,
+    color: 'rgba(255,255,255,0.9)',
+    marginBottom: 16,
+    fontSize: 14,
+    fontWeight: '500',
   },
   button: {
-    backgroundColor: colors.secondary,
-    paddingVertical: 14,
-    paddingHorizontal: 28,
+    backgroundColor: '#FFFFFF',
+    paddingVertical: 10,
+    paddingHorizontal: 20,
     borderRadius: 30,
     alignSelf: 'flex-start',
     shadowColor: '#000',
@@ -103,10 +168,28 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   buttonText: {
-    color: colors.textDark,
+    color: colors.primary,
     fontWeight: 'bold',
-    fontSize: 15,
-    letterSpacing: 0.5,
+    fontSize: 14,
+  },
+  pagination: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 12,
+  },
+  dot: {
+    height: 6,
+    borderRadius: 3,
+    marginHorizontal: 4,
+  },
+  activeDot: {
+    width: 18,
+    backgroundColor: colors.primary,
+  },
+  inactiveDot: {
+    width: 6,
+    backgroundColor: '#D1D5DB',
   },
 });
 

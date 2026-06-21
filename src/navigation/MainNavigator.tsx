@@ -1,13 +1,13 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import HomeScreen from '../screens/HomeScreen';
 import MatchesScreen from '../screens/MatchesScreen';
 import SearchScreen from '../screens/SearchScreen';
 import MessagesScreen from '../screens/MessagesScreen';
+import ProfileScreen from '../screens/ProfileScreen';
 import { colors } from '../theme/colors';
-import { Home, Heart, Search, MessageCircle } from 'lucide-react-native';
-
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Home, Heart, Search, MessageCircle, User } from 'lucide-react-native';
 
 const Tab = createBottomTabNavigator();
 
@@ -21,15 +21,15 @@ const MainNavigator = () => {
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.textLight,
         tabBarStyle: {
-          backgroundColor: colors.surface,
-          borderTopColor: colors.border,
-        },
-        tabBarItemStyle: {
-          paddingVertical: 1,
+          backgroundColor: '#fff',
+          borderTopColor: '#E5E7EB',
+          height: 60 + insets.bottom,
+          paddingBottom: 8 + insets.bottom,
+          paddingTop: 8,
         },
         tabBarLabelStyle: {
-          fontSize: 12,
-          fontWeight: '500',
+          fontSize: 11,
+          fontWeight: '600',
         },
       }}
     >
@@ -48,17 +48,24 @@ const MainNavigator = () => {
         }}
       />
       <Tab.Screen
-        name="Search"
+        name="Activity"
         component={SearchScreen}
         options={{
           tabBarIcon: ({ color, size }) => <Search color={color} size={size} />
         }}
       />
       <Tab.Screen
-        name="Messages"
+        name="Chat"
         component={MessagesScreen}
         options={{
           tabBarIcon: ({ color, size }) => <MessageCircle color={color} size={size} />
+        }}
+      />
+      <Tab.Screen
+        name="Profile"
+        component={ProfileScreen}
+        options={{
+          tabBarIcon: ({ color, size }) => <User color={color} size={size} />
         }}
       />
     </Tab.Navigator>

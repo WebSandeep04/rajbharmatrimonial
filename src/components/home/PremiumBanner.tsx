@@ -1,28 +1,66 @@
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import React, { useEffect, useRef } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, Animated, Dimensions } from 'react-native';
 import { Crown, Check } from 'lucide-react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import { colors } from '../../theme/colors';
-import { typography } from '../../theme/typography';
+
+const { width } = Dimensions.get('window');
 
 const PremiumBanner = () => {
+  const shimmerValue = useRef(new Animated.Value(-1)).current;
+
+  useEffect(() => {
+    const startShimmer = () => {
+      shimmerValue.setValue(-1);
+      Animated.timing(shimmerValue, {
+        toValue: 2,
+        duration: 2000,
+        useNativeDriver: true,
+      }).start(() => {
+        setTimeout(startShimmer, 3000);
+      });
+    };
+    startShimmer();
+  }, [shimmerValue]);
+
+  const shimmerTranslateX = shimmerValue.interpolate({
+    inputRange: [-1, 2],
+    outputRange: [-width, width * 2],
+  });
+
   const benefits = [
-    'Unlimited Interests',
-    'Direct Messaging',
-    'Contact Details Access',
+    'See who liked you',
+    'Send unlimited messages',
+    'Get priority visibility',
   ];
 
   return (
     <View style={styles.container}>
       <LinearGradient
-        colors={[colors.secondary, '#B8860B']}
+        colors={[colors.primary, colors.secondary]}
         style={styles.gradient}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
       >
+        <Animated.View
+          style={[
+            styles.shimmer,
+            {
+              transform: [{ translateX: shimmerTranslateX }, { skewX: '-20deg' }],
+            },
+          ]}
+        >
+          <LinearGradient
+            colors={['transparent', 'rgba(255,255,255,0.4)', 'transparent']}
+            style={{ width: '100%', height: '100%' }}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+          />
+        </Animated.View>
+
         <View style={styles.header}>
-          <Crown size={28} color={colors.primary} />
-          <Text style={styles.title}>Unlock Premium Features</Text>
+          <Crown size={28} color="#FFD700" />
+          <Text style={styles.title}>Become Premium</Text>
         </View>
 
         <View style={styles.benefitsContainer}>
@@ -47,58 +85,77 @@ const PremiumBanner = () => {
 const styles = StyleSheet.create({
   container: {
     marginHorizontal: 20,
-    marginBottom: 24,
-    borderRadius: 20,
-    elevation: 5,
-    shadowColor: colors.secondary,
-    shadowOffset: { width: 0, height: 4 },
+    marginBottom: 30,
+    borderRadius: 24,
+    elevation: 8,
+    shadowColor: colors.primary,
+    shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.3,
-    shadowRadius: 8,
+    shadowRadius: 15,
+    overflow: 'hidden',
   },
   gradient: {
-    borderRadius: 20,
+    borderRadius: 24,
     padding: 24,
+    position: 'relative',
+    overflow: 'hidden',
+  },
+  shimmer: {
+    position: 'absolute',
+    top: 0,
+    bottom: 0,
+    width: 100,
+    zIndex: 1,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 16,
+    zIndex: 2,
   },
   title: {
-    ...typography.h2,
-    color: colors.primary,
+    fontSize: 22,
+    fontWeight: '800',
+    color: '#FFF',
     marginLeft: 12,
   },
   benefitsContainer: {
     marginBottom: 24,
+    zIndex: 2,
   },
   benefitRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 10,
+    marginBottom: 12,
   },
   checkCircle: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    backgroundColor: 'rgba(255,255,255,0.6)',
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: '#FFF',
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 10,
+    marginRight: 12,
   },
   benefitText: {
-    color: colors.primary,
+    color: '#FFF',
     fontSize: 15,
     fontWeight: '600',
   },
   button: {
-    backgroundColor: colors.primary,
+    backgroundColor: '#FFF',
     paddingVertical: 14,
     borderRadius: 25,
     alignItems: 'center',
+    zIndex: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
+    elevation: 3,
   },
   buttonText: {
-    color: '#FFF',
+    color: colors.primary,
     fontWeight: 'bold',
     fontSize: 16,
   },

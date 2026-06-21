@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
-import { Bell, ShieldCheck } from 'lucide-react-native';
+import { Bell, Search } from 'lucide-react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
+import LinearGradient from 'react-native-linear-gradient';
 import { colors } from '../../theme/colors';
-import { typography } from '../../theme/typography';
 
 const TopAppBar = () => {
   const [userData, setUserData] = useState<{ name?: string, profile_photo?: string } | null>(null);
@@ -27,7 +27,10 @@ const TopAppBar = () => {
   const fallbackImage = { uri: 'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png' };
 
   return (
-    <View style={styles.container}>
+    <LinearGradient
+      colors={[colors.accentBeige, colors.surface]}
+      style={styles.container}
+    >
       <TouchableOpacity 
         style={styles.profileSection} 
         onPress={() => navigation.navigate('Profile')}
@@ -37,22 +40,18 @@ const TopAppBar = () => {
           style={styles.avatar}
         />
         <View style={styles.textContainer}>
-          <Text style={styles.greeting}>Good Evening,</Text>
+          <Text style={styles.greeting}>Good Morning 👋</Text>
           <Text style={styles.name}>{userData?.name?.split(' ')[0] || 'User'}</Text>
         </View>
       </TouchableOpacity>
 
       <View style={styles.rightSection}>
-        <View style={styles.premiumBadge}>
-          <ShieldCheck size={16} color="#FFFFFF" />
-          <Text style={styles.premiumText}>Premium</Text>
-        </View>
-        <TouchableOpacity style={styles.bellButton}>
+        <TouchableOpacity style={styles.iconButton}>
           <Bell size={24} color={colors.textDark} />
           <View style={styles.badgeIndicator} />
         </TouchableOpacity>
       </View>
-    </View>
+    </LinearGradient>
   );
 };
 
@@ -62,67 +61,60 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 20,
-    paddingTop: 25,
-    paddingBottom: 12,
-    backgroundColor: colors.surface,
+    paddingTop: 30,
+    paddingBottom: 20,
   },
   profileSection: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   avatar: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    marginRight: 12,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    marginRight: 14,
     borderWidth: 2,
-    borderColor: colors.secondary,
+    borderColor: '#fff',
   },
   textContainer: {
     justifyContent: 'center',
   },
   greeting: {
-    ...typography.caption,
+    fontSize: 14,
     color: colors.textLight,
+    marginBottom: 2,
   },
   name: {
-    ...typography.h3,
-    fontSize: 18,
-    color: colors.primary,
+    fontSize: 20,
+    fontWeight: '700',
+    color: colors.textDark,
   },
   rightSection: {
     flexDirection: 'row',
     alignItems: 'center',
   },
-  premiumBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.secondary,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 16,
-    marginRight: 16,
-  },
-  premiumText: {
-    color: '#FFFFFF',
-    fontWeight: 'bold',
-    fontSize: 12,
-    marginLeft: 4,
-  },
-  bellButton: {
+  iconButton: {
+    marginLeft: 16,
     position: 'relative',
-    padding: 4,
+    padding: 6,
+    backgroundColor: '#fff',
+    borderRadius: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 5,
+    elevation: 2,
   },
   badgeIndicator: {
     position: 'absolute',
     top: 4,
-    right: 6,
+    right: 4,
     width: 10,
     height: 10,
-    backgroundColor: colors.error,
+    backgroundColor: colors.primary,
     borderRadius: 5,
     borderWidth: 2,
-    borderColor: colors.surface,
+    borderColor: '#fff',
   },
 });
 

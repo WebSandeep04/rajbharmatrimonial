@@ -1,14 +1,39 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, Image, ScrollView, TouchableOpacity, ActivityIndicator, Dimensions } from 'react-native';
-import { CheckCircle2, MapPin, Briefcase, GraduationCap } from 'lucide-react-native';
+import React, { useEffect, useState, useRef } from 'react';
+import { View, Text, StyleSheet, Image, ScrollView, TouchableOpacity, ActivityIndicator, Dimensions, Animated } from 'react-native';
+import { CheckCircle2, Heart, X } from 'lucide-react-native';
 import { useNavigation } from '@react-navigation/native';
 import LinearGradient from 'react-native-linear-gradient';
 import api from '../../services/api';
 import { colors } from '../../theme/colors';
-import { typography } from '../../theme/typography';
 
 const { width } = Dimensions.get('window');
-const CARD_WIDTH = width * 0.75;
+const CARD_WIDTH = 280;
+const CARD_HEIGHT = 400;
+
+const AnimatedActionButton = ({ icon: Icon, color, onPress, isLeft }: any) => {
+  const scale = useRef(new Animated.Value(1)).current;
+
+  const handlePressIn = () => {
+    Animated.spring(scale, { toValue: 0.8, useNativeDriver: true }).start();
+  };
+  const handlePressOut = () => {
+    Animated.spring(scale, { toValue: 1, useNativeDriver: true, friction: 3, tension: 40 }).start();
+  };
+
+  return (
+    <TouchableOpacity
+      activeOpacity={0.9}
+      onPressIn={handlePressIn}
+      onPressOut={handlePressOut}
+      onPress={onPress}
+      style={[styles.actionButton, isLeft ? styles.skipButton : styles.likeButton]}
+    >
+      <Animated.View style={{ transform: [{ scale }] }}>
+        <Icon size={28} color={color} fill={isLeft ? 'transparent' : color} />
+      </Animated.View>
+    </TouchableOpacity>
+  );
+};
 
 const RecommendedProfiles = () => {
   const [profiles, setProfiles] = useState<any[]>([]);
@@ -29,22 +54,26 @@ const RecommendedProfiles = () => {
     fetchMatches();
   }, []);
 
-  const [sentRequests, setSentRequests] = useState<number[]>([]);
+  const [actedProfiles, setActedProfiles] = useState<number[]>([]);
 
-  const handleConnect = async (userId: number) => {
-    if (sentRequests.includes(userId)) return;
+  const handleLike = async (userId: number) => {
+    if (actedProfiles.includes(userId)) return;
     try {
       await api.post('/connections/send', { receiver_id: userId });
-      setSentRequests(prev => [...prev, userId]);
+      setActedProfiles(prev => [...prev, userId]);
     } catch (err) {
       console.error('Failed to send connection request', err);
     }
   };
 
+  const handleSkip = (userId: number) => {
+    setActedProfiles(prev => [...prev, userId]);
+  };
+
   return (
     <View style={styles.container}>
       <View style={styles.headerRow}>
-        <Text style={styles.sectionTitle}>Recommended Matches</Text>
+        <Text style={styles.sectionTitle}>Recommended For You</Text>
         <TouchableOpacity>
           <Text style={styles.seeAll}>See All</Text>
         </TouchableOpacity>
@@ -59,66 +88,58 @@ const RecommendedProfiles = () => {
           horizontal 
           showsHorizontalScrollIndicator={false} 
           contentContainerStyle={styles.scrollContent}
-          snapToInterval={CARD_WIDTH + 16} // card width + margin
+          snapToInterval={CARD_WIDTH + 16}
           decelerationRate="fast"
-          snapToAlignment="center"
+          snapToAlignment="start"
         >
           {profiles.map((profile) => {
-            const hasSent = sentRequests.includes(profile.id);
+            if (actedProfiles.includes(profile.id)) return null;
+
             return (
               <View key={profile.id} style={styles.card}>
-                <View style={styles.imageContainer}>
+                <TouchableOpacity 
+                  activeOpacity={0.9} 
+                  onPress={() => navigation.navigate('UserProfile', { userId: profile.id })}
+                  style={styles.imageContainer}
+                >
                   <Image source={{ uri: profile.image }} style={styles.image} />
                   <LinearGradient
-                    colors={colors.gradientOverlay}
-                    style={styles.imageOverlay}
+                    colors={['transparent', 'rgba(0,0,0,0.85)']}
+                    style={styles.gradientOverlay}
                   />
                   
-                  <View style={styles.matchBadge}>
-                    <Text style={styles.matchText}>{profile.matchPercentage}% Match</Text>
-                  </View>
-
-                  <View style={styles.imageContent}>
-                    <View style={styles.nameRow}>
-                      <Text style={styles.name}>{profile.name}, {profile.age}</Text>
-                      {profile.verified && <CheckCircle2 size={18} color={colors.secondary} style={styles.verifiedIcon} />}
+                  <View style={styles.topBadges}>
+                    <View style={styles.verifiedBadge}>
+                      <CheckCircle2 size={14} color={colors.primary} />
+                      <Text style={styles.verifiedText}>Verified</Text>
                     </View>
                   </View>
-                </View>
 
-                <View style={styles.infoContainer}>
-                  <View style={styles.detailRow}>
-                    <Briefcase size={16} color={colors.textLight} />
-                    <Text style={styles.detailText} numberOfLines={1}>{profile.profession}</Text>
+                  <View style={styles.glassmorphismPanel}>
+                    <Text style={styles.name}>{profile.name}, {profile.age}</Text>
+                    <Text style={styles.detailsText}>{profile.profession}</Text>
+                    <Text style={styles.detailsText}>{profile.city}</Text>
+                    
+                    <View style={styles.bottomRow}>
+                      <Text style={styles.matchPercentage}>{profile.matchPercentage}% Match</Text>
+                    </View>
                   </View>
+                </TouchableOpacity>
 
-                  <View style={styles.detailRow}>
-                    <GraduationCap size={16} color={colors.textLight} />
-                    <Text style={styles.detailText} numberOfLines={1}>{profile.education}</Text>
-                  </View>
-
-                  <View style={styles.detailRow}>
-                    <MapPin size={16} color={colors.textLight} />
-                    <Text style={styles.detailText} numberOfLines={1}>{profile.city}</Text>
-                  </View>
-
-                  <View style={styles.actionRow}>
-                    <TouchableOpacity 
-                      style={styles.viewButton}
-                      onPress={() => navigation.navigate('UserProfile', { userId: profile.id })}
-                    >
-                      <Text style={styles.viewButtonText}>View Profile</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity 
-                      style={[styles.interestButton, hasSent && { backgroundColor: colors.border }]}
-                      onPress={() => handleConnect(profile.id)}
-                      disabled={hasSent}
-                    >
-                      <Text style={[styles.interestButtonText, hasSent && { color: colors.textDark }]}>
-                        {hasSent ? 'Sent' : 'Connect'}
-                      </Text>
-                    </TouchableOpacity>
-                  </View>
+                {/* Floating Actions */}
+                <View style={styles.actionsContainer}>
+                  <AnimatedActionButton 
+                    icon={X} 
+                    color="#6B7280" 
+                    isLeft={true} 
+                    onPress={() => handleSkip(profile.id)} 
+                  />
+                  <AnimatedActionButton 
+                    icon={Heart} 
+                    color={colors.primary} 
+                    isLeft={false} 
+                    onPress={() => handleLike(profile.id)} 
+                  />
                 </View>
               </View>
             );
@@ -138,11 +159,12 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 20,
-    marginBottom: 20,
+    marginBottom: 15,
   },
   sectionTitle: {
-    ...typography.h3,
     fontSize: 20,
+    fontWeight: '800',
+    color: colors.textDark,
   },
   seeAll: {
     color: colors.primary,
@@ -151,126 +173,119 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingHorizontal: 16,
-    paddingBottom: 24, 
+    paddingBottom: 30, 
     paddingTop: 8,
   },
   card: {
     width: CARD_WIDTH,
-    backgroundColor: colors.surface,
-    borderRadius: 24,
+    height: CARD_HEIGHT,
+    backgroundColor: '#fff',
+    borderRadius: 28,
     marginHorizontal: 8,
-    elevation: 8,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.12,
-    shadowRadius: 10,
-    overflow: 'hidden',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.15,
+    shadowRadius: 20,
+    elevation: 10,
+    position: 'relative',
   },
   imageContainer: {
-    position: 'relative',
-    height: 240,
+    width: '100%',
+    height: '100%',
+    borderRadius: 28,
+    overflow: 'hidden',
   },
   image: {
     width: '100%',
-    height: '100%',
+    height: '70%',
     resizeMode: 'cover',
   },
-  imageOverlay: {
+  gradientOverlay: {
     position: 'absolute',
     left: 0,
     right: 0,
     bottom: 0,
-    height: '50%',
+    height: '60%',
   },
-  matchBadge: {
+  topBadges: {
     position: 'absolute',
     top: 16,
     left: 16,
-    backgroundColor: 'rgba(255,255,255,0.9)',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
   },
-  matchText: {
-    color: colors.primary,
-    fontWeight: 'bold',
-    fontSize: 12,
-  },
-  imageContent: {
-    position: 'absolute',
-    bottom: 16,
-    left: 16,
-    right: 16,
-  },
-  nameRow: {
+  verifiedBadge: {
     flexDirection: 'row',
     alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.95)',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 12,
+  },
+  verifiedText: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    color: colors.textDark,
+    marginLeft: 4,
+  },
+  glassmorphismPanel: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    padding: 20,
+    paddingBottom: 35,
   },
   name: {
-    ...typography.h2,
-    fontSize: 22,
-    color: '#FFF',
-    textShadowColor: 'rgba(0,0,0,0.5)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 3,
+    fontSize: 24,
+    fontWeight: '800',
+    color: '#fff',
+    marginBottom: 4,
   },
-  verifiedIcon: {
-    marginLeft: 8,
-  },
-  infoContainer: {
-    padding: 20,
-  },
-  detailRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  detailText: {
+  detailsText: {
     fontSize: 14,
-    color: colors.textLight,
-    marginLeft: 12,
-    flex: 1,
+    color: 'rgba(255,255,255,0.85)',
+    marginBottom: 2,
   },
-  actionRow: {
+  bottomRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginTop: 16,
-    gap: 12,
-  },
-  viewButton: {
-    flex: 1,
-    paddingVertical: 12,
-    borderRadius: 24,
-    borderWidth: 1.5,
-    borderColor: colors.primaryLight,
     alignItems: 'center',
+    marginTop: 8,
   },
-  viewButtonText: {
-    color: colors.primaryLight,
-    fontWeight: 'bold',
+  matchPercentage: {
     fontSize: 14,
+    fontWeight: '700',
+    color: colors.accentRoseGold,
   },
-  interestButton: {
-    flex: 1,
-    backgroundColor: colors.primaryLight,
-    paddingVertical: 12,
-    borderRadius: 24,
+  actionsContainer: {
+    position: 'absolute',
+    bottom: -25,
+    left: 0,
+    right: 0,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 20,
+    zIndex: 10,
+  },
+  actionButton: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: '#fff',
+    justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: colors.primaryLight,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 6,
-    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.15,
+    shadowRadius: 10,
+    elevation: 8,
   },
-  interestButtonText: {
-    color: '#FFFFFF',
-    fontWeight: 'bold',
-    fontSize: 14,
+  skipButton: {
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+  },
+  likeButton: {
+    borderWidth: 1,
+    borderColor: '#FCE7F3',
   },
 });
 
