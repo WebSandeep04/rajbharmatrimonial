@@ -36,7 +36,9 @@ const UserProfileScreen = () => {
   if (loading) {
     return (
       <SafeAreaView style={styles.centerContainer}>
-        <ActivityIndicator size="large" color={colors.primary} />
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+          <ActivityIndicator size="large" color={colors.primary} />
+        </View>
       </SafeAreaView>
     );
   }
@@ -44,10 +46,12 @@ const UserProfileScreen = () => {
   if (!profile) {
     return (
       <SafeAreaView style={styles.centerContainer}>
-        <Text>User not found</Text>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={{ marginTop: 20 }}>
-          <Text style={{ color: colors.primary }}>Go Back</Text>
-        </TouchableOpacity>
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+          <Text>User not found</Text>
+          <TouchableOpacity onPress={() => navigation.goBack()} style={{ marginTop: 20 }}>
+            <Text style={{ color: colors.primary }}>Go Back</Text>
+          </TouchableOpacity>
+        </View>
       </SafeAreaView>
     );
   }
@@ -59,7 +63,7 @@ const UserProfileScreen = () => {
           <TouchableOpacity activeOpacity={0.9} onPress={() => setSelectedImage(profile.image)}>
             <Image source={{ uri: profile.image }} style={styles.image} />
           </TouchableOpacity>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.backButton}
             onPress={() => navigation.goBack()}
           >
@@ -72,7 +76,7 @@ const UserProfileScreen = () => {
             <Text style={styles.name}>{profile.name}, {profile.age}</Text>
             {profile.verified && <CheckCircle2 size={24} color={colors.secondary} style={styles.verifiedIcon} />}
           </View>
-          
+
           <View style={styles.locationRow}>
             <MapPin size={16} color={colors.textLight} />
             <Text style={styles.locationText}>{profile.city}, {profile.state}</Text>
@@ -159,28 +163,28 @@ const UserProfileScreen = () => {
 
       <View style={styles.footer}>
         {connectionStatus !== 'connected' ? (
-          <TouchableOpacity 
-            style={[styles.connectButton, connectionStatus === 'request_sent' && styles.connectButtonDisabled]} 
+          <TouchableOpacity
+            style={[styles.connectButton, connectionStatus === 'request_sent' && styles.connectButtonDisabled]}
             onPress={handleConnect}
             disabled={connectionStatus === 'request_sent' || connecting}
           >
             <Text style={styles.connectButtonText}>
-              {connecting ? 'Processing...' : 
-               connectionStatus === 'none' ? 'Connect Now' :
-               connectionStatus === 'request_sent' ? 'Request Sent' :
-               connectionStatus === 'request_received' ? 'Accept Request' :
-               'Connected'}
+              {connecting ? 'Processing...' :
+                connectionStatus === 'none' ? 'Connect Now' :
+                  connectionStatus === 'request_sent' ? 'Request Sent' :
+                    connectionStatus === 'request_received' ? 'Accept Request' :
+                      'Connected'}
             </Text>
           </TouchableOpacity>
         ) : (
-          <TouchableOpacity 
-            style={[styles.connectButton, { backgroundColor: colors.secondary || '#D4A373' }]} 
-            onPress={() => navigation.navigate('Chat', { 
-              targetUser: { 
-                id: userId, 
-                name: profile.name, 
-                avatar: profile.image || profile.profile_photo 
-              } 
+          <TouchableOpacity
+            style={[styles.connectButton, { backgroundColor: colors.secondary || '#D4A373' }]}
+            onPress={() => navigation.navigate('Chat', {
+              targetUser: {
+                id: userId,
+                name: profile.name,
+                avatar: profile.image || profile.profile_photo
+              }
             })}
           >
             <Text style={styles.connectButtonText}>Send Message</Text>

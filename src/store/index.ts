@@ -7,6 +7,7 @@ import homeReducer from './slices/homeSlice';
 import searchReducer from './slices/searchSlice';
 import userProfileReducer from './slices/userProfileSlice';
 import myProfileReducer from './slices/myProfileSlice';
+import nearbyMatchesReducer from './slices/nearbyMatchesSlice';
 
 export const store = configureStore({
   reducer: {
@@ -18,6 +19,7 @@ export const store = configureStore({
     search: searchReducer,
     userProfile: userProfileReducer,
     myProfile: myProfileReducer,
+    nearbyMatches: nearbyMatchesReducer,
   },
   // Middleware can be customized here if needed
   middleware: (getDefaultMiddleware) =>
