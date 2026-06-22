@@ -1,4 +1,4 @@
-import React, { useEffect, useCallback } from 'react';
+import React, { useEffect, useCallback, useState } from 'react';
 import { View, ActivityIndicator, Text, TouchableOpacity, Image, KeyboardAvoidingView, Platform, Alert } from 'react-native';
 import { GiftedChat, IMessage, Bubble, InputToolbar } from 'react-native-gifted-chat';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -9,6 +9,7 @@ import { ChevronLeft, Send as SendIcon } from 'lucide-react-native';
 import { styles } from '../styles/ChatScreenStyles';
 import { useAppSelector, useAppDispatch } from '../store/hooks';
 import { initializeChatRoom, sendChatMessage, setMessagesForRoom, setChatLoading, setChatError } from '../store/slices/chatSlice';
+import CustomAlert from '../components/common/CustomAlert';
 
 const ChatScreen = () => {
   const route = useRoute<any>();
@@ -19,6 +20,8 @@ const ChatScreen = () => {
   useEffect(() => {
     navigation.setOptions({ headerShown: false });
   }, [navigation]);
+
+  const [premiumAlertVisible, setPremiumAlertVisible] = useState(false);
 
   // Read state from Redux
   const { activeRoomId, messages, loading, error, initializingRoom } = useAppSelector(state => state.chat);
@@ -85,14 +88,7 @@ const ChatScreen = () => {
 
     // Premium Check: Prevent non-premium users from sending messages
     if (!userInfo?.is_premium) {
-      Alert.alert(
-        "Premium Required",
-        "You need a Premium subscription to send messages.",
-        [
-          { text: "Cancel", style: "cancel" },
-          { text: "Upgrade", onPress: () => navigation.navigate("Premium") }
-        ]
-      );
+      setPremiumAlertVisible(true);
       return;
     }
 
@@ -176,11 +172,22 @@ const ChatScreen = () => {
               />
             )}
             renderInputToolbar={(props) => (
-              <InputToolbar
-                {...props}
-                containerStyle={styles.inputToolbar}
-                primaryStyle={{ alignItems: 'center' }}
-              />
+              !userInfo?.is_premium ? (
+                <TouchableOpacity 
+                  style={[styles.inputToolbar, { justifyContent: 'center', alignItems: 'center', backgroundColor: '#fff', borderTopWidth: 1, borderTopColor: '#eee', padding: 15 }]} 
+                  onPress={() => {
+                    setPremiumAlertVisible(true);
+                  }}
+                >
+                  <Text style={{ color: colors.primary, fontWeight: 'bold', fontSize: 16 }}>Upgrade to Premium to send messages</Text>
+                </TouchableOpacity>
+              ) : (
+                <InputToolbar
+                  {...props}
+                  containerStyle={styles.inputToolbar}
+                  primaryStyle={{ alignItems: 'center' }}
+                />
+              )
             )}
             renderSend={(props) => (
               <TouchableOpacity
@@ -198,6 +205,20 @@ const ChatScreen = () => {
           />
         </KeyboardAvoidingView>
       )}
+
+      <CustomAlert
+        visible={premiumAlertVisible}
+        title="Premium Required"
+        message="You need a Premium subscription to send messages. Upgrade now to chat freely!"
+        onClose={() => setPremiumAlertVisible(false)}
+        onConfirm={() => {
+          setPremiumAlertVisible(false);
+          navigation.navigate("Premium" as never);
+        }}
+        confirmText="Upgrade"
+        cancelText="Cancel"
+        showCrownIcon={true}
+      />
     </SafeAreaView>
   );
 };

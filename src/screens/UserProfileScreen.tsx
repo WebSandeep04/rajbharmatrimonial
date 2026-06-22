@@ -7,6 +7,7 @@ import { colors } from '../theme/colors';
 import { styles } from '../styles/UserProfileScreenStyles';
 import { useAppDispatch, useAppSelector } from '../store/hooks';
 import { fetchUserProfile, handleConnectAction, resetUserProfile } from '../store/slices/userProfileSlice';
+import CustomAlert from '../components/common/CustomAlert';
 
 const UserProfileScreen = () => {
   const route = useRoute<any>();
@@ -16,6 +17,7 @@ const UserProfileScreen = () => {
 
   const { profile, loading, connectionStatus, connectionId, connecting } = useAppSelector((state) => state.userProfile);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [premiumAlertVisible, setPremiumAlertVisible] = useState(false);
 
   useFocusEffect(
     React.useCallback(() => {
@@ -34,14 +36,7 @@ const UserProfileScreen = () => {
       await dispatch(handleConnectAction({ userId, connectionStatus, connectionId })).unwrap();
     } catch (error) {
       if (error === 'PREMIUM_REQUIRED') {
-        Alert.alert(
-          "Premium Required",
-          "You've reached your free limit of 2 connections. Upgrade to Premium for unlimited connections!",
-          [
-            { text: "Cancel", style: "cancel" },
-            { text: "Upgrade", onPress: () => navigation.navigate("Premium") }
-          ]
-        );
+        setPremiumAlertVisible(true);
       }
     }
   };
@@ -213,6 +208,20 @@ const UserProfileScreen = () => {
           <Image source={{ uri: selectedImage || '' }} style={styles.fullScreenImage} />
         </View>
       </Modal>
+
+      <CustomAlert
+        visible={premiumAlertVisible}
+        title="Premium Required"
+        message="You've reached your free limit for connection requests. Upgrade to Premium for unlimited connections!"
+        onClose={() => setPremiumAlertVisible(false)}
+        onConfirm={() => {
+          setPremiumAlertVisible(false);
+          navigation.navigate('Premium');
+        }}
+        confirmText="Upgrade"
+        cancelText="Cancel"
+        showCrownIcon={true}
+      />
 
     </SafeAreaView>
   );

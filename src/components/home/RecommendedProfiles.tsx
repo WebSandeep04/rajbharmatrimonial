@@ -1,10 +1,11 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { View, Text, StyleSheet, Image, ScrollView, TouchableOpacity, ActivityIndicator, Dimensions, Animated } from 'react-native';
+import { View, Text, StyleSheet, Image, ScrollView, TouchableOpacity, ActivityIndicator, Dimensions, Animated, Alert } from 'react-native';
 import { CheckCircle2, Heart, X } from 'lucide-react-native';
 import { useNavigation } from '@react-navigation/native';
 import LinearGradient from 'react-native-linear-gradient';
 import api from '../../services/api';
 import { colors } from '../../theme/colors';
+import CustomAlert from '../common/CustomAlert';
 
 const { width } = Dimensions.get('window');
 const CARD_WIDTH = 280;
@@ -38,6 +39,7 @@ const AnimatedActionButton = ({ icon: Icon, color, onPress, isLeft }: any) => {
 const RecommendedProfiles = () => {
   const [profiles, setProfiles] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [premiumAlertVisible, setPremiumAlertVisible] = useState(false);
   const navigation = useNavigation<any>();
 
   useEffect(() => {
@@ -61,8 +63,12 @@ const RecommendedProfiles = () => {
     try {
       await api.post('/connections/send', { receiver_id: userId });
       setActedProfiles(prev => [...prev, userId]);
-    } catch (err) {
-      console.error('Failed to send connection request', err);
+    } catch (err: any) {
+      if (err.response?.status === 403 || err.response?.data?.error_code === 'PREMIUM_REQUIRED') {
+        setPremiumAlertVisible(true);
+      } else {
+        console.error('Failed to send connection request', err);
+      }
     }
   };
 
@@ -146,6 +152,20 @@ const RecommendedProfiles = () => {
           })}
         </ScrollView>
       )}
+
+      <CustomAlert
+        visible={premiumAlertVisible}
+        title="Premium Required"
+        message="You have reached your daily limit for connection requests. Upgrade to Premium to send unlimited requests!"
+        onClose={() => setPremiumAlertVisible(false)}
+        onConfirm={() => {
+          setPremiumAlertVisible(false);
+          navigation.navigate('Premium');
+        }}
+        confirmText="Upgrade"
+        cancelText="Cancel"
+        showCrownIcon={true}
+      />
     </View>
   );
 };
