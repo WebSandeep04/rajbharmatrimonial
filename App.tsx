@@ -20,6 +20,8 @@ import MainNavigator from './src/navigation/MainNavigator';
 import ChatScreen from './src/screens/ChatScreen';
 import PremiumScreen from './src/screens/PremiumScreen';
 
+import NotificationsScreen from './src/screens/NotificationsScreen';
+
 const Stack = createNativeStackNavigator();
 
 function App() {
@@ -49,6 +51,7 @@ function App() {
             <Stack.Screen name="Profile" component={ProfileScreen} />
             <Stack.Screen name="Chat" component={ChatScreen} />
             <Stack.Screen name="Premium" component={PremiumScreen} />
+            <Stack.Screen name="Notifications" component={NotificationsScreen} />
           </Stack.Navigator>
         </NavigationContainer>
       </SafeAreaProvider>

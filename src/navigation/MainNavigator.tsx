@@ -1,4 +1,6 @@
-import React from 'react';
+import React, { useEffect } from 'react';
+import { useAppSelector, useAppDispatch } from '../store/hooks';
+import { fetchConnectionsAndRequests } from '../store/slices/matchesSlice';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import HomeScreen from '../screens/HomeScreen';
@@ -13,6 +15,14 @@ const Tab = createBottomTabNavigator();
 
 const MainNavigator = () => {
   const insets = useSafeAreaInsets();
+  const dispatch = useAppDispatch();
+  const { requests } = useAppSelector((state) => state.matches);
+
+  useEffect(() => {
+    dispatch(fetchConnectionsAndRequests());
+  }, [dispatch]);
+
+  const pendingRequestsCount = requests?.length || 0;
 
   return (
     <Tab.Navigator
@@ -44,7 +54,9 @@ const MainNavigator = () => {
         name="Matches"
         component={MatchesScreen}
         options={{
-          tabBarIcon: ({ color, size }) => <Heart color={color} size={size} />
+          tabBarIcon: ({ color, size }) => <Heart color={color} size={size} />,
+          tabBarBadge: pendingRequestsCount > 0 ? pendingRequestsCount : undefined,
+          tabBarBadgeStyle: { backgroundColor: colors.primary, color: '#fff' }
         }}
       />
       <Tab.Screen
@@ -55,7 +67,7 @@ const MainNavigator = () => {
         }}
       />
       <Tab.Screen
-        name="Chat"
+        name="Messages"
         component={MessagesScreen}
         options={{
           tabBarIcon: ({ color, size }) => <MessageCircle color={color} size={size} />

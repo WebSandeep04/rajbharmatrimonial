@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, Image, TouchableOpacity, Alert } from 'react-native';
 import { Bell, Search } from 'lucide-react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
@@ -26,6 +26,40 @@ const TopAppBar = () => {
   const navigation = useNavigation<any>();
   const fallbackImage = { uri: 'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png' };
 
+  const handleNotificationPress = async () => {
+    try {
+      const pref = await AsyncStorage.getItem('notificationsEnabled');
+      
+      if (pref === 'false') {
+        // Notifications were explicitly turned off in Profile
+        Alert.alert(
+          'Notifications Disabled',
+          'You have disabled push notifications. Would you like to turn them on to receive updates?',
+          [
+            { text: 'Cancel', style: 'cancel' },
+            { 
+              text: 'Turn On', 
+              onPress: async () => {
+                await AsyncStorage.setItem('notificationsEnabled', 'true');
+                const { NotificationService } = require('../../services/NotificationService');
+                await NotificationService.requestUserPermission();
+                navigation.navigate('Notifications');
+              }
+            }
+          ]
+        );
+      } else {
+        // Check system permission if not explicitly disabled
+        const { NotificationService } = require('../../services/NotificationService');
+        await NotificationService.requestUserPermission();
+        navigation.navigate('Notifications');
+      }
+    } catch (e) {
+      console.log('Error handling notification press', e);
+      navigation.navigate('Notifications');
+    }
+  };
+
   return (
     <LinearGradient
       colors={[colors.accentBeige, colors.surface]}
@@ -46,7 +80,7 @@ const TopAppBar = () => {
       </TouchableOpacity>
 
       <View style={styles.rightSection}>
-        <TouchableOpacity style={styles.iconButton}>
+        <TouchableOpacity style={styles.iconButton} onPress={handleNotificationPress}>
           <Bell size={24} color={colors.textDark} />
           <View style={styles.badgeIndicator} />
         </TouchableOpacity>
