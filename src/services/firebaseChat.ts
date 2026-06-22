@@ -20,6 +20,7 @@ export interface ChatRoom {
   participantDetails: { [key: string]: ChatUser };
   lastMessage: string;
   lastMessageTime: number;
+  unreadCounts?: Record<string, number>;
 }
 
 /**
@@ -69,13 +70,28 @@ export const sendMessage = async (roomId: string, messages: any[]) => {
     });
 
     // Update the last message on the room
+    const receiverId = roomRef.id.split('_').find(id => id !== msg.user._id.toString());
+    
     batch.update(roomRef, {
       lastMessage: msg.text,
       lastMessageTime: firestore.FieldValue.serverTimestamp(),
+      [`unreadCounts.${receiverId}`]: firestore.FieldValue.increment(1),
     });
   });
 
   await batch.commit();
+};
+
+/**
+ * Marks a chat room as read for a specific user.
+ */
+export const markRoomAsRead = async (roomId: string, userId: string | number) => {
+  const roomRef = firestore().collection('chatRooms').doc(roomId);
+  await roomRef.set({
+    [`unreadCounts`]: {
+      [userId.toString()]: 0
+    }
+  }, { merge: true });
 };
 
 /**

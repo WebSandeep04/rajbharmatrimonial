@@ -17,12 +17,21 @@ const MainNavigator = () => {
   const insets = useSafeAreaInsets();
   const dispatch = useAppDispatch();
   const { requests } = useAppSelector((state) => state.matches);
+  const { rooms } = useAppSelector((state) => state.chat);
+  const { userInfo } = useAppSelector((state) => state.auth);
 
   useEffect(() => {
     dispatch(fetchConnectionsAndRequests());
   }, [dispatch]);
 
   const pendingRequestsCount = requests?.length || 0;
+  
+  // Calculate total unread messages
+  const currentUserId = userInfo?.id?.toString() || '';
+  const unreadMessagesCount = rooms?.reduce((total, room) => {
+    const count = room.unreadCounts?.[currentUserId] || 0;
+    return total + count;
+  }, 0) || 0;
 
   return (
     <Tab.Navigator
@@ -70,7 +79,9 @@ const MainNavigator = () => {
         name="Messages"
         component={MessagesScreen}
         options={{
-          tabBarIcon: ({ color, size }) => <MessageCircle color={color} size={size} />
+          tabBarIcon: ({ color, size }) => <MessageCircle color={color} size={size} />,
+          tabBarBadge: unreadMessagesCount > 0 ? unreadMessagesCount : undefined,
+          tabBarBadgeStyle: { backgroundColor: colors.primary, color: '#fff' }
         }}
       />
       <Tab.Screen

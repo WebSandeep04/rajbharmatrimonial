@@ -38,6 +38,9 @@ const MessagesScreen = () => {
       ? item.participantDetails[otherParticipantId] 
       : { _id: 'unknown', name: 'Unknown User' };
 
+    const unreadCount = item.unreadCounts?.[currentUserId || ''] || 0;
+    const isUnread = unreadCount > 0;
+
     return (
       <TouchableOpacity 
         style={styles.chatItem}
@@ -47,13 +50,25 @@ const MessagesScreen = () => {
           <Text style={styles.avatarText}>{otherParticipant.name?.charAt(0) || 'U'}</Text>
         </View>
         <View style={styles.chatInfo}>
-          <Text style={styles.chatName}>{otherParticipant.name}</Text>
-          <Text style={styles.lastMessage} numberOfLines={1}>{item.lastMessage || 'Start a conversation'}</Text>
+          <Text style={[styles.chatName, isUnread && { fontWeight: 'bold', color: colors.textDark }]}>{otherParticipant.name}</Text>
+          <Text 
+            style={[styles.lastMessage, isUnread && { fontWeight: 'bold', color: colors.textDark }]} 
+            numberOfLines={1}
+          >
+            {item.lastMessage || 'Start a conversation'}
+          </Text>
         </View>
         {item.lastMessageTime && (
-          <Text style={styles.timeText}>
-            {new Date(item.lastMessageTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-          </Text>
+          <View style={{ alignItems: 'flex-end' }}>
+            <Text style={[styles.timeText, isUnread && { color: colors.primary, fontWeight: 'bold' }]}>
+              {new Date(item.lastMessageTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+            </Text>
+            {isUnread && (
+              <View style={{ backgroundColor: colors.primary, borderRadius: 10, minWidth: 20, height: 20, justifyContent: 'center', alignItems: 'center', marginTop: 4 }}>
+                <Text style={{ color: '#fff', fontSize: 10, fontWeight: 'bold' }}>{unreadCount}</Text>
+              </View>
+            )}
+          </View>
         )}
       </TouchableOpacity>
     );

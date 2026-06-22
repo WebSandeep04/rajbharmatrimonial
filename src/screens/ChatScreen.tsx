@@ -3,7 +3,7 @@ import { View, ActivityIndicator, Text, TouchableOpacity, Image, KeyboardAvoidin
 import { GiftedChat, IMessage, Bubble, InputToolbar } from 'react-native-gifted-chat';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors } from '../theme/colors';
-import { subscribeToMessages, ChatUser } from '../services/firebaseChat';
+import { subscribeToMessages, markRoomAsRead, ChatUser } from '../services/firebaseChat';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import { ChevronLeft, Send as SendIcon } from 'lucide-react-native';
 import { styles } from '../styles/ChatScreenStyles';
@@ -61,9 +61,12 @@ const ChatScreen = () => {
   }, [dispatch, targetUser?.id, currentUser?._id]);
 
   useEffect(() => {
-    if (!activeRoomId) return;
+    if (!activeRoomId || !currentUser?._id) return;
 
     dispatch(setChatLoading(true));
+
+    // Mark messages as read for this user
+    markRoomAsRead(activeRoomId, currentUser._id).catch(console.error);
 
     // Subscribe to messages in real-time, dispatch to Redux store
     const unsubscribe = subscribeToMessages(activeRoomId, (newMessages, err) => {
@@ -75,7 +78,7 @@ const ChatScreen = () => {
     });
 
     return () => unsubscribe();
-  }, [dispatch, activeRoomId]);
+  }, [dispatch, activeRoomId, currentUser?._id]);
 
   const onSend = useCallback((newMessages: IMessage[] = []) => {
     if (!activeRoomId) return;
