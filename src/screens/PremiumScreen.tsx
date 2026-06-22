@@ -15,8 +15,8 @@ const PremiumScreen = () => {
   ];
 
   const features = [
-    'Unlimited chat',
-    'Unlimited matches',
+    'Get Unlimited match',
+    'Get Unlimited chat',
     'Get priority visibility',
   ];
 
@@ -36,7 +36,7 @@ const PremiumScreen = () => {
 
         <View style={styles.content}>
           <Text style={styles.sectionTitle}>Why Upgrade?</Text>
-          
+
           <View style={styles.featuresList}>
             {features.map((feat, idx) => (
               <View key={idx} style={styles.featureItem}>
@@ -47,10 +47,10 @@ const PremiumScreen = () => {
           </View>
 
           <Text style={styles.sectionTitle}>Choose a Plan</Text>
-          
+
           {plans.map((plan, idx) => (
-            <TouchableOpacity 
-              key={idx} 
+            <TouchableOpacity
+              key={idx}
               style={[styles.planCard, plan.recommended && styles.planCardRecommended]}
               activeOpacity={0.8}
             >

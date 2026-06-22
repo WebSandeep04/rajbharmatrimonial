@@ -31,8 +31,8 @@ const PremiumBanner = () => {
   });
 
   const benefits = [
-    'See who liked you',
-    'Send unlimited messages',
+    'Get Unlimited match',
+    'Get Unlimited chat',
     'Get priority visibility',
   ];
 
@@ -76,8 +76,8 @@ const PremiumBanner = () => {
           ))}
         </View>
 
-        <TouchableOpacity 
-          style={styles.button} 
+        <TouchableOpacity
+          style={styles.button}
           activeOpacity={0.9}
           onPress={() => navigation.navigate('Premium')}
         >
