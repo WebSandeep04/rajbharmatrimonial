@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { View, Text, FlatList, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { View, Text, FlatList, TouchableOpacity, ActivityIndicator, Image } from 'react-native';
 import { colors } from '../theme/colors';
 import { typography } from '../theme/typography';
 import TopAppBar from '../components/home/TopAppBar';
@@ -38,17 +38,29 @@ const MessagesScreen = () => {
       ? item.participantDetails[otherParticipantId] 
       : { _id: 'unknown', name: 'Unknown User' };
 
+    // Use the latest profile photo from connections if available, otherwise fallback to firebase
+    const { connections } = require('../store').store.getState().matches;
+    const connectionUser = connections.find((c: any) => c.id.toString() === otherParticipantId);
+    const freshestAvatar = connectionUser?.profile_photo || otherParticipant.avatar;
+
     const unreadCount = item.unreadCounts?.[currentUserId || ''] || 0;
     const isUnread = unreadCount > 0;
 
     return (
       <TouchableOpacity 
         style={styles.chatItem}
-        onPress={() => navigation.navigate('Chat', { targetUser: { id: otherParticipant._id, name: otherParticipant.name, avatar: otherParticipant.avatar } })}
+        onPress={() => navigation.navigate('Chat', { targetUser: { id: otherParticipant._id, name: otherParticipant.name, avatar: freshestAvatar } })}
       >
-        <View style={styles.avatarPlaceholder}>
-          <Text style={styles.avatarText}>{otherParticipant.name?.charAt(0) || 'U'}</Text>
-        </View>
+        {freshestAvatar ? (
+          <Image 
+            source={{ uri: freshestAvatar }} 
+            style={[styles.avatarPlaceholder, { backgroundColor: 'transparent', borderRadius: 25, width: 50, height: 50 }]} 
+          />
+        ) : (
+          <View style={styles.avatarPlaceholder}>
+            <Text style={styles.avatarText}>{otherParticipant.name?.charAt(0) || 'U'}</Text>
+          </View>
+        )}
         <View style={styles.chatInfo}>
           <Text style={[styles.chatName, isUnread && { fontWeight: 'bold', color: colors.textDark }]}>{otherParticipant.name}</Text>
           <Text 

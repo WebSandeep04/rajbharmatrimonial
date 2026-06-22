@@ -30,7 +30,7 @@ const ChatScreen = () => {
   const otherUser: ChatUser = targetUser ? {
     _id: targetUser.id?.toString(),
     name: targetUser.name || 'Match',
-    avatar: targetUser.avatar || '',
+    avatar: targetUser.avatar || targetUser.profile_photo || '',
   } : {
     _id: 'unknown',
     name: 'Unknown',
@@ -42,7 +42,7 @@ const ChatScreen = () => {
   const currentUser: ChatUser | null = userInfo ? {
     _id: userInfo.id?.toString(),
     name: userInfo.name || 'User',
-    avatar: userInfo.avatar || '',
+    avatar: userInfo.avatar || userInfo.profile_photo || '',
   } : null;
 
   useEffect(() => {
