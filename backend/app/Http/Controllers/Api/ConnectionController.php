@@ -32,6 +32,18 @@ class ConnectionController extends Controller
             return response()->json(['message' => 'Connection request already exists.', 'status' => $existing->status], 400);
         }
 
+        // Limit non-premium users to 2 connections/requests
+        if (!$request->user()->is_premium) {
+            $totalConnectionsAndRequests = Connection::where('sender_id', $senderId)
+                ->orWhere(function($q) use ($senderId) {
+                    $q->where('receiver_id', $senderId)->where('status', 'accepted');
+                })->count();
+
+            if ($totalConnectionsAndRequests >= 2) {
+                return response()->json(['message' => 'Premium required to connect with more than 2 people', 'error_code' => 'PREMIUM_REQUIRED'], 403);
+            }
+        }
+
         $connection = Connection::create([
             'sender_id' => $senderId,
             'receiver_id' => $receiverId,

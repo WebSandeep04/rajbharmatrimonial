@@ -54,6 +54,9 @@ export const handleConnectAction = createAsyncThunk(
       }
       return { status: connectionStatus, connectionId };
     } catch (error: any) {
+      if (error.response?.data?.error_code === 'PREMIUM_REQUIRED') {
+        return rejectWithValue('PREMIUM_REQUIRED');
+      }
       return rejectWithValue(error.message || 'Connection action failed');
     }
   }

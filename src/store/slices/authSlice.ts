@@ -10,6 +10,7 @@ export interface UserInfo {
   profile_photo?: string;
   avatar?: string;
   religion_id?: number | string;
+  is_premium?: boolean;
   [key: string]: any;
 }
 

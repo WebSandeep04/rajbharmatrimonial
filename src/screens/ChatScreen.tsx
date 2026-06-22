@@ -1,5 +1,5 @@
 import React, { useEffect, useCallback } from 'react';
-import { View, ActivityIndicator, Text, TouchableOpacity, Image, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, ActivityIndicator, Text, TouchableOpacity, Image, KeyboardAvoidingView, Platform, Alert } from 'react-native';
 import { GiftedChat, IMessage, Bubble, InputToolbar } from 'react-native-gifted-chat';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors } from '../theme/colors';
@@ -82,12 +82,26 @@ const ChatScreen = () => {
 
   const onSend = useCallback((newMessages: IMessage[] = []) => {
     if (!activeRoomId) return;
+
+    // Premium Check: Prevent non-premium users from sending messages
+    if (!userInfo?.is_premium) {
+      Alert.alert(
+        "Premium Required",
+        "You need a Premium subscription to send messages.",
+        [
+          { text: "Cancel", style: "cancel" },
+          { text: "Upgrade", onPress: () => navigation.navigate("Premium") }
+        ]
+      );
+      return;
+    }
+
     dispatch(sendChatMessage({ 
       roomId: activeRoomId, 
       messages: newMessages,
       receiverId: targetUser?.id?.toString()
     }));
-  }, [dispatch, activeRoomId, targetUser]);
+  }, [dispatch, activeRoomId, targetUser, userInfo, navigation]);
 
   return (
     <SafeAreaView 
@@ -131,6 +145,10 @@ const ChatScreen = () => {
               _id: currentUser._id!,
               name: currentUser.name,
               avatar: currentUser.avatar,
+            }}
+            placeholder={userInfo?.is_premium ? "Type a message..." : "Premium required to send messages"}
+            textInputProps={{
+              editable: !!userInfo?.is_premium,
             }}
             alwaysShowSend
             renderAvatar={null}

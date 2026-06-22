@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, Image, ScrollView, TouchableOpacity, ActivityIndicator, Modal } from 'react-native';
+import { View, Text, Image, ScrollView, TouchableOpacity, ActivityIndicator, Modal, Alert } from 'react-native';
 import { useRoute, useNavigation, useFocusEffect } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ChevronLeft, MapPin, Briefcase, GraduationCap, CheckCircle2, X } from 'lucide-react-native';
@@ -10,7 +10,7 @@ import { fetchUserProfile, handleConnectAction, resetUserProfile } from '../stor
 
 const UserProfileScreen = () => {
   const route = useRoute<any>();
-  const navigation = useNavigation();
+  const navigation = useNavigation<any>();
   const userId = route.params?.userId;
   const dispatch = useAppDispatch();
 
@@ -28,9 +28,22 @@ const UserProfileScreen = () => {
     }, [userId, dispatch])
   );
 
-  const handleConnect = () => {
+  const handleConnect = async () => {
     if (connecting) return;
-    dispatch(handleConnectAction({ userId, connectionStatus, connectionId }));
+    try {
+      await dispatch(handleConnectAction({ userId, connectionStatus, connectionId })).unwrap();
+    } catch (error) {
+      if (error === 'PREMIUM_REQUIRED') {
+        Alert.alert(
+          "Premium Required",
+          "You've reached your free limit of 2 connections. Upgrade to Premium for unlimited connections!",
+          [
+            { text: "Cancel", style: "cancel" },
+            { text: "Upgrade", onPress: () => navigation.navigate("Premium") }
+          ]
+        );
+      }
+    }
   };
 
   if (loading) {
