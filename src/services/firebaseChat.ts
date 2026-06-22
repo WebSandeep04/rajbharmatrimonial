@@ -138,11 +138,11 @@ export const subscribeToInbox = (userId: string | number, callback: (rooms: Chat
   return firestore()
     .collection('chatRooms')
     .where('participants', 'array-contains', userId.toString())
-    .orderBy('lastMessageTime', 'desc')
     .onSnapshot(
       (querySnapshot) => {
         if (!querySnapshot) {
           console.warn('subscribeToInbox: querySnapshot is null');
+          callback([]);
           return;
         }
         const rooms = querySnapshot.docs.map((doc) => {
@@ -156,10 +156,14 @@ export const subscribeToInbox = (userId: string | number, callback: (rooms: Chat
           return data;
         });
 
+        // Sort rooms client-side to avoid needing a Firestore composite index
+        rooms.sort((a, b) => (b.lastMessageTime || 0) - (a.lastMessageTime || 0));
+
         callback(rooms);
       },
       (error) => {
         console.error('Error in subscribeToInbox:', error);
+        callback([]); // Pass empty array on error to stop the loading spinner
       }
     );
 };
