@@ -150,7 +150,7 @@ const ProfileScreen = () => {
 
         <View style={styles.profileSection}>
           <TouchableOpacity onPress={pickProfileImage} disabled={uploadingProfileImage}>
-            <View>
+            <View style={{ position: 'relative' }}>
               <Image 
                 source={userInfo?.profile_photo ? { uri: userInfo.profile_photo } : fallbackImage}
                 style={styles.avatar} 
@@ -160,7 +160,23 @@ const ProfileScreen = () => {
               </View>
             </View>
           </TouchableOpacity>
-          <Text style={styles.name}>{userInfo?.name || 'User'}</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
+            <Text style={styles.name}>{userInfo?.name || 'User'}</Text>
+            {userInfo?.is_premium && (
+              <View style={{
+                marginLeft: 8,
+                backgroundColor: '#FFD700',
+                paddingHorizontal: 6,
+                paddingVertical: 2,
+                borderRadius: 8,
+                borderWidth: 1,
+                borderColor: '#fff',
+                marginTop: 10
+              }}>
+                <Text style={{ color: '#000', fontSize: 10, fontWeight: 'bold' }}>PRO</Text>
+              </View>
+            )}
+          </View>
           <Text style={styles.email}>{userInfo?.email || 'No Email'}</Text>
           
           <TouchableOpacity 

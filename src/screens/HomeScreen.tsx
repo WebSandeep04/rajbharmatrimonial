@@ -8,6 +8,7 @@ import SuccessStories from '../components/home/SuccessStories';
 import NearbyMatches from '../components/home/NearbyMatches';
 import PremiumBanner from '../components/home/PremiumBanner';
 import { styles } from '../styles/HomeScreenStyles';
+import { useAppSelector } from '../store/hooks';
 
 const FadeInView = ({ children, delay = 0 }: any) => {
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -39,6 +40,8 @@ const FadeInView = ({ children, delay = 0 }: any) => {
 };
 
 const HomeScreen = () => {
+  const { userInfo } = useAppSelector((state) => state.auth);
+
   return (
     <View style={styles.container}>
       <StatusBar hidden={true} />
@@ -65,9 +68,11 @@ const HomeScreen = () => {
           <NearbyMatches />
         </FadeInView>
 
-        <FadeInView delay={500}>
-          <PremiumBanner />
-        </FadeInView>
+        {!userInfo?.is_premium && (
+          <FadeInView delay={500}>
+            <PremiumBanner />
+          </FadeInView>
+        )}
 
         <FadeInView delay={600}>
           <SuccessStories />

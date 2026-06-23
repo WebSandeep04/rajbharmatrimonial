@@ -8,10 +8,14 @@ import { createPaymentOrder, verifyPaymentSignature } from '../services/payment'
 import { CheckCircle2, ChevronLeft, Crown } from 'lucide-react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import { colors } from '../theme/colors';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useAppDispatch } from '../store/hooks';
+import { updateUserInfo } from '../store/slices/authSlice';
 
 const PremiumScreen = () => {
   const navigation = useNavigation<any>();
   const insets = useSafeAreaInsets();
+  const dispatch = useAppDispatch();
 
   const plans = [
     { name: 'Monthly Plan', price: '₹99 / month', recommended: true },
@@ -58,7 +62,18 @@ const PremiumScreen = () => {
 
           if (verifyData.success) {
             Alert.alert('Success', 'Payment Successful! Enjoy your Premium features.');
-            // Here you can navigate the user back or unlock features
+            
+            // Update Redux state
+            dispatch(updateUserInfo({ is_premium: true }));
+            
+            // Update AsyncStorage
+            const userInfoStr = await AsyncStorage.getItem('userInfo');
+            if (userInfoStr) {
+              const userInfo = JSON.parse(userInfoStr);
+              userInfo.is_premium = true;
+              await AsyncStorage.setItem('userInfo', JSON.stringify(userInfo));
+            }
+            
             navigation.goBack();
           } else {
             Alert.alert('Error', 'Payment verification failed on server.');

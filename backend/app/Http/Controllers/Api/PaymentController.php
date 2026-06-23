@@ -82,6 +82,14 @@ class PaymentController extends Controller
                     'razorpay_signature' => $request->razorpay_signature,
                     'status' => 'successful'
                 ]);
+
+                if ($payment->user_id) {
+                    $user = \App\Models\User::find($payment->user_id);
+                    if ($user) {
+                        $user->is_premium = 1;
+                        $user->save();
+                    }
+                }
             }
 
             return response()->json(['success' => true, 'message' => 'Payment verified successfully']);

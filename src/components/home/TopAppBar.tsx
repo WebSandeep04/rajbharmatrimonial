@@ -5,23 +5,10 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
 import LinearGradient from 'react-native-linear-gradient';
 import { colors } from '../../theme/colors';
+import { useAppSelector } from '../../store/hooks';
 
 const TopAppBar = () => {
-  const [userData, setUserData] = useState<{ name?: string, profile_photo?: string } | null>(null);
-
-  useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const userInfo = await AsyncStorage.getItem('userInfo');
-        if (userInfo) {
-          setUserData(JSON.parse(userInfo));
-        }
-      } catch (error) {
-        console.error('Failed to load user info', error);
-      }
-    };
-    fetchUser();
-  }, []);
+  const { userInfo } = useAppSelector((state) => state.auth);
 
   const navigation = useNavigation<any>();
   const fallbackImage = { uri: 'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png' };
@@ -69,13 +56,20 @@ const TopAppBar = () => {
         style={styles.profileSection} 
         onPress={() => navigation.navigate('Profile')}
       >
-        <Image
-          source={userData?.profile_photo ? { uri: userData.profile_photo } : fallbackImage}
-          style={styles.avatar}
-        />
+        <View style={{ position: 'relative' }}>
+          <Image
+            source={userInfo?.profile_photo ? { uri: userInfo.profile_photo } : fallbackImage}
+            style={styles.avatar}
+          />
+          {userInfo?.is_premium && (
+            <View style={styles.proBadge}>
+              <Text style={styles.proBadgeText}>PRO</Text>
+            </View>
+          )}
+        </View>
         <View style={styles.textContainer}>
           <Text style={styles.greeting}>Good Morning 👋</Text>
-          <Text style={styles.name}>{userData?.name?.split(' ')[0] || 'User'}</Text>
+          <Text style={styles.name}>{userInfo?.name?.split(' ')[0] || 'User'}</Text>
         </View>
       </TouchableOpacity>
 
@@ -149,6 +143,22 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     borderWidth: 2,
     borderColor: '#fff',
+  },
+  proBadge: {
+    position: 'absolute',
+    bottom: -4,
+    right: 8,
+    backgroundColor: '#FFD700', // Gold color for premium
+    paddingHorizontal: 4,
+    paddingVertical: 2,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#fff',
+  },
+  proBadgeText: {
+    color: '#000',
+    fontSize: 8,
+    fontWeight: 'bold',
   },
 });
 
