@@ -23,6 +23,13 @@ class NotificationController extends Controller
 
         // Chunk users to prevent memory issues and fit within Firebase Multicast limits (500 per request)
         User::whereNotNull('fcm_token')->chunk(500, function ($users) use ($firebaseService, $request, &$totalSuccess, &$totalFailures) {
+            // Save to database for all these users
+            try {
+                \Illuminate\Support\Facades\Notification::send($users, new \App\Notifications\GeneralNotification($request->title, $request->body, ['type' => 'broadcast']));
+            } catch (\Exception $e) {
+                \Illuminate\Support\Facades\Log::error('Broadcast Database Notification Error: ' . $e->getMessage());
+            }
+
             $tokens = $users->pluck('fcm_token')->filter()->toArray();
             
             if (!empty($tokens)) {

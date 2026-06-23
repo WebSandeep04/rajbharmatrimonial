@@ -1,17 +1,67 @@
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, FlatList } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, FlatList, ActivityIndicator, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
-import { ChevronLeft, BellOff } from 'lucide-react-native';
+import { ChevronLeft, BellOff, CheckCircle } from 'lucide-react-native';
 import { colors } from '../theme/colors';
+import { fetchNotifications, markNotificationAsRead, markAllNotificationsAsRead } from '../services/NotificationService';
+import dayjs from 'dayjs';
+import relativeTime from 'dayjs/plugin/relativeTime';
+
+dayjs.extend(relativeTime);
 
 const NotificationsScreen = () => {
   const navigation = useNavigation();
+  const [notifications, setNotifications] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
 
-  // In the future, this can be fetched from a backend notifications endpoint.
-  // Currently, the backend only pushes FCM notifications and does not store them,
-  // so this list will be empty unless local state is added later.
-  const notifications: any[] = [];
+  const loadNotifications = async () => {
+    try {
+      const data = await fetchNotifications();
+      if (data.success) {
+        setNotifications(data.data.data); // data.data contains the paginated result
+      }
+    } catch (error) {
+      console.error('Failed to load notifications', error);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  };
+
+  useEffect(() => {
+    loadNotifications();
+  }, []);
+
+  const onRefresh = () => {
+    setRefreshing(true);
+    loadNotifications();
+  };
+
+  const handleMarkAsRead = async (id: string | number) => {
+    // Optimistic UI update
+    setNotifications(prev => 
+      prev.map(n => n.id === id ? { ...n, read_at: new Date().toISOString() } : n)
+    );
+    try {
+      await markNotificationAsRead(id);
+    } catch (error) {
+      console.error('Failed to mark as read', error);
+      // Revert on failure
+      loadNotifications();
+    }
+  };
+
+  const handleMarkAllAsRead = async () => {
+    setNotifications(prev => prev.map(n => ({ ...n, read_at: new Date().toISOString() })));
+    try {
+      await markAllNotificationsAsRead();
+    } catch (error) {
+      console.error('Failed to mark all as read', error);
+      loadNotifications();
+    }
+  };
 
   const renderHeader = () => (
     <View style={styles.header}>
@@ -19,15 +69,40 @@ const NotificationsScreen = () => {
         <ChevronLeft size={24} color={colors.textDark} />
       </TouchableOpacity>
       <Text style={styles.headerTitle}>Notifications</Text>
-      <View style={{ width: 24 }} />
+      <TouchableOpacity onPress={handleMarkAllAsRead} style={styles.markAllButton}>
+        <CheckCircle size={20} color={colors.primary} />
+      </TouchableOpacity>
     </View>
   );
+
+  const renderItem = ({ item }: { item: any }) => {
+    const isUnread = !item.read_at;
+    const { title, message } = item.data;
+
+    return (
+      <TouchableOpacity 
+        style={[styles.notificationCard, isUnread && styles.unreadCard]}
+        onPress={() => isUnread && handleMarkAsRead(item.id)}
+      >
+        <View style={styles.notificationContent}>
+          <Text style={[styles.notificationTitle, isUnread && styles.unreadText]}>{title || 'New Notification'}</Text>
+          <Text style={styles.notificationMessage}>{message || ''}</Text>
+          <Text style={styles.notificationTime}>{dayjs(item.created_at).fromNow()}</Text>
+        </View>
+        {isUnread && <View style={styles.unreadDot} />}
+      </TouchableOpacity>
+    );
+  };
 
   return (
     <SafeAreaView style={styles.container}>
       {renderHeader()}
       
-      {notifications.length === 0 ? (
+      {loading && !refreshing ? (
+        <View style={styles.centerContainer}>
+          <ActivityIndicator size="large" color={colors.primary} />
+        </View>
+      ) : notifications.length === 0 ? (
         <View style={styles.emptyContainer}>
           <BellOff size={60} color={colors.textLight} style={{ marginBottom: 16 }} />
           <Text style={styles.emptyTitle}>No new notifications</Text>
@@ -36,9 +111,12 @@ const NotificationsScreen = () => {
       ) : (
         <FlatList
           data={notifications}
-          keyExtractor={(item, index) => index.toString()}
-          renderItem={() => null}
+          keyExtractor={(item) => item.id}
+          renderItem={renderItem}
           contentContainerStyle={{ padding: 16 }}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[colors.primary]} />
+          }
         />
       )}
     </SafeAreaView>
@@ -85,6 +163,61 @@ const styles = StyleSheet.create({
     color: colors.textLight,
     textAlign: 'center',
     lineHeight: 20,
+  },
+  centerContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  markAllButton: {
+    padding: 4,
+  },
+  notificationCard: {
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
+    borderWidth: 1,
+    borderColor: '#f0f0f0',
+  },
+  unreadCard: {
+    backgroundColor: '#f8faff',
+    borderColor: '#e1e9ff',
+  },
+  notificationContent: {
+    flex: 1,
+  },
+  notificationTitle: {
+    fontSize: 16,
+    color: colors.textDark,
+    marginBottom: 4,
+  },
+  unreadText: {
+    fontWeight: '700',
+  },
+  notificationMessage: {
+    fontSize: 14,
+    color: colors.textLight,
+    marginBottom: 8,
+    lineHeight: 20,
+  },
+  notificationTime: {
+    fontSize: 12,
+    color: '#9CA3AF',
+  },
+  unreadDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: colors.primary,
+    marginLeft: 12,
   },
 });
 

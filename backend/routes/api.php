@@ -43,6 +43,22 @@ Route::middleware('auth:sanctum')->group(function () {
     // Payments
     Route::post('/payment/create-order', [\App\Http\Controllers\Api\PaymentController::class, 'createOrder']);
     Route::post('/payment/verify', [\App\Http\Controllers\Api\PaymentController::class, 'verifyPayment']);
+
+    // Notifications
+    Route::get('/notifications', [\App\Http\Controllers\Api\NotificationController::class, 'index']);
+    Route::get('/notifications/unread-count', [\App\Http\Controllers\Api\NotificationController::class, 'unreadCount']);
+    Route::post('/notifications/{id}/mark-read', [\App\Http\Controllers\Api\NotificationController::class, 'markAsRead']);
+    Route::post('/notifications/mark-all-read', [\App\Http\Controllers\Api\NotificationController::class, 'markAllAsRead']);
+    
+    // Test Notification
+    Route::post('/notifications/test', function (Illuminate\Http\Request $request) {
+        $request->user()->notify(new \App\Notifications\GeneralNotification(
+            'Test Notification',
+            'This is a test notification to verify the new notification system.',
+            ['type' => 'system_test']
+        ));
+        return response()->json(['success' => true, 'message' => 'Test notification sent!']);
+    });
 });
 
 Route::get('/master-data', [\App\Http\Controllers\Api\MasterDataController::class, 'all']);

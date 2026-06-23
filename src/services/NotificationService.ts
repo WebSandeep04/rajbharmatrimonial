@@ -139,3 +139,41 @@ export const registerBackgroundHandler = () => {
     // Notifee or Firebase will automatically show the system tray notification if it contains a `notification` payload.
   });
 };
+
+// --- Database Notification API Methods ---
+
+export const fetchNotifications = async (page = 1) => {
+  try {
+    const response = await api.get(`/notifications?page=${page}`);
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const fetchUnreadCount = async () => {
+  try {
+    const response = await api.get('/notifications/unread-count');
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const markNotificationAsRead = async (id: string | number) => {
+  try {
+    const response = await api.post(`/notifications/${id}/mark-read`);
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const markAllNotificationsAsRead = async () => {
+  try {
+    const response = await api.post('/notifications/mark-all-read');
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};

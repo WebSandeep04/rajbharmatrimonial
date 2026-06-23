@@ -30,6 +30,13 @@ class FirebaseService
      */
     public function sendNotification(User $user, $title, $body, $data = [])
     {
+        // Save notification to database
+        try {
+            $user->notify(new \App\Notifications\GeneralNotification($title, $body, $data));
+        } catch (\Exception $e) {
+            Log::error('Database Notification Error: ' . $e->getMessage());
+        }
+
         if (!$this->messaging || !$user->fcm_token) {
             return false;
         }

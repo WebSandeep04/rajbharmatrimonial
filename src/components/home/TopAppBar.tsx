@@ -2,16 +2,34 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, Image, TouchableOpacity, Alert } from 'react-native';
 import { Bell, Search } from 'lucide-react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import LinearGradient from 'react-native-linear-gradient';
 import { colors } from '../../theme/colors';
 import { useAppSelector } from '../../store/hooks';
+import { fetchUnreadCount } from '../../services/NotificationService';
 
 const TopAppBar = () => {
   const { userInfo } = useAppSelector((state) => state.auth);
+  const [unreadCount, setUnreadCount] = useState(0);
 
   const navigation = useNavigation<any>();
   const fallbackImage = { uri: 'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png' };
+
+  useFocusEffect(
+    React.useCallback(() => {
+      const getCount = async () => {
+        try {
+          const res = await fetchUnreadCount();
+          if (res.success) {
+            setUnreadCount(res.unread_count);
+          }
+        } catch (e) {
+          console.error(e);
+        }
+      };
+      getCount();
+    }, [])
+  );
 
   const handleNotificationPress = async () => {
     try {
@@ -76,7 +94,7 @@ const TopAppBar = () => {
       <View style={styles.rightSection}>
         <TouchableOpacity style={styles.iconButton} onPress={handleNotificationPress}>
           <Bell size={24} color={colors.textDark} />
-          <View style={styles.badgeIndicator} />
+          {unreadCount > 0 && <View style={styles.badgeIndicator} />}
         </TouchableOpacity>
       </View>
     </LinearGradient>

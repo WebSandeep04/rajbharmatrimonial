@@ -1,0 +1,1 @@
+<?php try { $user = App\Models\User::first(); $user->notify(new \App\Notifications\GeneralNotification('Test Title', 'Test Body', ['type' => 'test'])); echo 'Notified!'; } catch (\Exception $e) { echo $e->getMessage(); }
