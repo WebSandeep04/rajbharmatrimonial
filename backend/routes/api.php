@@ -39,6 +39,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/user/images', [\App\Http\Controllers\Api\UserImageController::class, 'store']);
     Route::post('/user/profile-photo', [\App\Http\Controllers\Api\UserImageController::class, 'uploadProfilePhoto']);
     Route::delete('/user/images/{id}', [\App\Http\Controllers\Api\UserImageController::class, 'destroy']);
+
+    // Payments
+    Route::post('/payment/create-order', [\App\Http\Controllers\Api\PaymentController::class, 'createOrder']);
+    Route::post('/payment/verify', [\App\Http\Controllers\Api\PaymentController::class, 'verifyPayment']);
 });
 
 Route::get('/master-data', [\App\Http\Controllers\Api\MasterDataController::class, 'all']);

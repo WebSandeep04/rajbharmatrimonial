@@ -2,6 +2,9 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
+import { Alert } from 'react-native';
+import RazorpayCheckout from 'react-native-razorpay';
+import { createPaymentOrder, verifyPaymentSignature } from '../services/payment';
 import { CheckCircle2, ChevronLeft, Crown } from 'lucide-react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import { colors } from '../theme/colors';
@@ -19,6 +22,60 @@ const PremiumScreen = () => {
     'Get Unlimited chat',
     'Get priority visibility',
   ];
+
+  const handlePayment = async () => {
+    try {
+      const amount = 99; // Base amount for the plan
+      const orderData = await createPaymentOrder(amount, 'Premium Membership Monthly Plan');
+
+      if (!orderData.success) {
+        Alert.alert('Error', 'Failed to create payment order. Please try again later.');
+        return;
+      }
+
+      const options = {
+        description: 'Premium Membership Monthly Plan',
+        currency: orderData.currency,
+        key: orderData.key, // Dynamically use the key from backend
+        amount: orderData.amount * 100, // Amount is in currency subunits
+        name: 'Rajbhar Matrimonial',
+        order_id: orderData.order_id,
+        prefill: {
+          email: 'test@example.com',
+          contact: '9999999999',
+          name: 'Test User'
+        },
+        theme: { color: colors.primary }
+      };
+
+      RazorpayCheckout.open(options).then(async (data: any) => {
+        try {
+          const verifyData = await verifyPaymentSignature({
+            razorpay_order_id: data.razorpay_order_id,
+            razorpay_payment_id: data.razorpay_payment_id,
+            razorpay_signature: data.razorpay_signature
+          });
+
+          if (verifyData.success) {
+            Alert.alert('Success', 'Payment Successful! Enjoy your Premium features.');
+            // Here you can navigate the user back or unlock features
+            navigation.goBack();
+          } else {
+            Alert.alert('Error', 'Payment verification failed on server.');
+          }
+        } catch (verifyError) {
+          console.error(verifyError);
+          Alert.alert('Error', 'Payment verification error.');
+        }
+      }).catch((error: any) => {
+        Alert.alert('Error', `Payment Cancelled/Failed: ${error.description || error.message}`);
+      });
+
+    } catch (error: any) {
+      console.error(error);
+      Alert.alert('Error', 'Something went wrong while initiating payment.');
+    }
+  };
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -69,7 +126,7 @@ const PremiumScreen = () => {
       </ScrollView>
 
       <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom + 20, 40) }]}>
-        <TouchableOpacity style={styles.subscribeButton} activeOpacity={0.9}>
+        <TouchableOpacity style={styles.subscribeButton} activeOpacity={0.9} onPress={handlePayment}>
           <Text style={styles.subscribeButtonText}>Continue to Payment</Text>
         </TouchableOpacity>
       </View>
